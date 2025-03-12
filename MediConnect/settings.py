@@ -123,12 +123,16 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Twilio Configuration
-TWILIO_ACCOUNT_SID = "ACc916ac3cd3053334b6a985b437eb1808"
-TWILIO_AUTH_TOKEN = "986e160f0d10d4ec1710415fd9b137ea"
-TWILIO_PHONE_NUMBER = "+18103807242"
-
 # Celery Settings
 CELERY_BROKER_URL = "redis://localhost:6379/0"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
+
+# Email Configuration for Gmail (You can change this to Outlook, Yahoo, etc.)
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"  # Use "smtp.office365.com" for Outlook
+EMAIL_PORT = 587  # Use 465 for SSL
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "elikiprop42@gmail.com"  # Your email
+EMAIL_HOST_PASSWORD = "zkjiokaotdyflbdd"  # App password (not your normal email password)
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

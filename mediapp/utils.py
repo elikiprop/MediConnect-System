@@ -1,24 +1,15 @@
-import re
-from twilio.rest import Client
-from twilio.base.exceptions import TwilioRestException
+from django.core.mail import send_mail
 from django.conf import settings
 
-def format_phone_number(phone):
-    """ Convert Kenyan phone numbers to E.164 format """
-    if phone.startswith("0"):
-        return "+254" + phone[1:]  # Convert 071767XXXX → +25471767XXXX
-    elif not phone.startswith("+"):
-        return "+254" + phone  # Add +254 if missing
-    return phone
+def send_email_notification(to_email, subject, message):
+    print(f"📩 Sending email to: {to_email}")  # Debugging output
 
-def send_sms(to, message):
-    try:
-        formatted_to = format_phone_number(to)  # ✅ Format number correctly
-        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-        client.messages.create(
-            body=message,
-            from_=settings.TWILIO_PHONE_NUMBER,
-            to=formatted_to
-        )
-    except TwilioRestException as e:
-        print(f"Twilio Error: {e}")  # Log error for debugging
+    send_mail(
+        subject,
+        message,
+        settings.EMAIL_HOST_USER,  # Sender email
+        [to_email],  # Doctor's email
+        fail_silently=False,
+    )
+    print("✅ Email sent successfully!")
+

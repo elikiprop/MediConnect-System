@@ -26,8 +26,12 @@
                 <td>{{ appointment.date }}</td>
                 <td>{{ appointment.time }}</td>
                 <td>
-                    <a href="https://video-call-link.com" class="btn btn-primary btn-sm">Video Call</a>
-                    <a href="tel:{{ appointment.phone }}" class="btn btn-secondary btn-sm">Voice Call</a>
+                    {% if appointment.google_meet_link %}
+                        <a href="{{ appointment.google_meet_link }}" target="_blank" class="btn btn-primary btn-sm"> Video Call </a>
+                        <a href="{{ appointment.google_meet_link }}" target="_blank" class="btn btn-secondary btn-sm"> Voice Call</a>
+                    {% else %}
+                        <span class="text-danger">No meeting link available</span>
+                    {% endif %}
                 </td>
             </tr>
             {% empty %}

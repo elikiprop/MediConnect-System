@@ -13,6 +13,12 @@ urlpatterns = [
     path("service/", views.service, name="service"),
     path("team/", views.team, name="team"),
     path("testimonial/", views.testimonial, name="testimonial"),
-    path("book-appointment/", views.book_appointment, name="book_appointment"),  
-    path("view-appointments/", views.view_appointments, name="view_appointments"),  # ✅ Ensure this function exists
+    
+    # Booking and Viewing Appointments
+    path("book-appointment/", views.book_appointment, name="book_appointment"),
+    path("view-appointments/", views.view_appointments, name="view_appointments"),
+
+    # Notify Doctor when a patient joins a Video/Voice Call
+    path("notify-doctor-video-call/<int:appointment_id>/", views.notify_doctor_video_call, name="notify_doctor_video_call"),
+    path("notify-doctor-voice-call/<int:appointment_id>/", views.notify_doctor_voice_call, name="notify_doctor_voice_call"),
 ]

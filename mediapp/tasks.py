@@ -1,33 +1,18 @@
 from celery import shared_task
-from datetime import datetime, timedelta
-from django.conf import settings
-from twilio.rest import Client
+from datetime import timedelta
+from django.utils.timezone import now
 from .models import Appointment
-
-# Twilio SMS Sending Function
-def send_sms(to, message):
-    client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-    client.messages.create(
-        body=message,
-        from_=settings.TWILIO_PHONE_NUMBER,
-        to=to
-    )
+from .utils import send_email
 
 @shared_task
-def schedule_reminder_task(appointment_id):
-    """
-    Celery task to send appointment reminders.
-    """
-    try:
-        appointment = Appointment.objects.get(id=appointment_id)
-        reminder_time = appointment.date - timedelta(hours=1)  # 1 hour before
-        now = datetime.now().date()
-
-        if reminder_time == now:
-            message = f"Reminder: Your appointment with {appointment.doctor} at {appointment.time} is in 1 hour."
-            send_sms(appointment.phone, message)  # Send to patient
-            send_sms("+254717677588", message)  # Send to doctor (replace with doctor's phone)
-            
-        return f"Reminder sent for appointment ID {appointment.id}"
-    except Appointment.DoesNotExist:
-        return "Appointment not found"
+def send_appointment_reminders():
+    upcoming_appointments = Appointment.objects.filter(
+        date=now().date(),
+        time__lte=(now() + timedelta(hours=1)).time()
+    )
+    
+    for appointment in upcoming_appointments:
+        subject = "Upcoming Appointment Reminder"
+        message = f"Dear {appointment.name},\n\nThis is a reminder for your upcoming appointment with {appointment.doctor} in the {appointment.department} department.\n\n📅 Date: {appointment.date}\n⏰ Time: {appointment.time}\n\nPlease be on time.\n\nBest Regards,\nMediConnect Team"
+        
+        send_email(appointment.email, subject, message)
