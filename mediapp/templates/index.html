@@ -158,83 +158,88 @@
 
 
     <!-- Appointment Start -->
-    <div class="container-fluid bg-primary my-5 py-5">
-        <div class="container py-5">
-            <div class="row gx-5">
-                <div class="col-lg-6 mb-5 mb-lg-0">
-                    <div class="mb-4">
-                        <h5 class="d-inline-block text-white text-uppercase border-bottom border-5">Appointment</h5>
-                        <h1 class="display-4">Make An Appointment For Your Family</h1>
-                    </div>
-                    <p class="text-white mb-5">Easily book your appointment with just a few clicks! Get timely, hassle-free access to expert healthcare and personalized medical care when you need it most.</p>
-                    <a class="btn btn-dark rounded-pill py-3 px-5 me-3" href="">Find Doctor</a>
-                    <a class="btn btn-outline-dark rounded-pill py-3 px-5" href="">Read More</a>
+<div class="container-fluid bg-primary my-5 py-5">
+    <div class="container py-5">
+        <div class="row gx-5">
+            <div class="col-lg-6 mb-5 mb-lg-0">
+                <div class="mb-4">
+                    <h5 class="d-inline-block text-white text-uppercase border-bottom border-5">Appointment</h5>
+                    <h1 class="display-4">Make An Appointment</h1>
                 </div>
-                <div class="col-lg-6">
-                    <div class="bg-white text-center rounded p-5">
-                        <h1 class="mb-4">Book An Appointment</h1>
-                        <form>
-                            <div class="row g-3">
-                                <div class="col-12 col-sm-6">
-                                    <select class="form-select bg-light border-0" style="height: 55px;">
-                                        <option selected>Choose Department</option>
-                                        <option value="1">Department of Emergency Medicine</option>
-                                            <option value="2">Department of General Medicine</option>
-                                            <option value="3">Department of Surgery</option>
-                                            <option value="4">Department of Pediatrics</option>
-                                            <option value="5">Department of Gynecology and Obstetrics</option>
-                                            <option value="6">Department of Cardiology</option>
-                                            <option value="7">Department of Neurology</option>
-                                            <option value="8">Department of Oncology</option>
-                                            <option value="9">Department of Orthopedics</option>
-                                            <option value="10">Department of Radiology and Imaging</option>
-                                            <option value="11">Department of Pathology and Laboratory</option>
-                                            <option value="12">Department of Pharmacy</option>
-                                    </select>
-                                </div>
-                                <div class="col-12 col-sm-6">
-                                    <select class="form-select bg-light border-0" style="height: 55px;">
-                                        <option selected>Select Doctor</option>
-                                        <option value="1">Doctor Kiprop</option>
-                                        <option value="2">Doctor Wambwere</option>
-                                        <option value="3">Doctor Jackie</option>
-                                        <option value="4">Doctor Lisper</option>
-                                        <option value="5">Doctor Mirriel</option>
-                                        <option value="6">Doctor Reckie</option>
-                                        <option value="7">Doctor Cherop</option>                                        
-                                    </select>
-                                </div>
-                                <div class="col-12 col-sm-6">
-                                    <input type="text" class="form-control bg-light border-0" placeholder="Your Name" style="height: 55px;">
-                                </div>
-                                <div class="col-12 col-sm-6">
-                                    <input type="email" class="form-control bg-light border-0" placeholder="Your Email" style="height: 55px;">
-                                </div>
-                                <div class="col-12 col-sm-6">
-                                    <div class="date" id="date" data-target-input="nearest">
-                                        <input type="text"
-                                            class="form-control bg-light border-0 datetimepicker-input"
-                                            placeholder="Date" data-target="#date" data-toggle="datetimepicker" style="height: 55px;">
-                                    </div>
-                                </div>
-                                <div class="col-12 col-sm-6">
-                                    <div class="time" id="time" data-target-input="nearest">
-                                        <input type="text"
-                                            class="form-control bg-light border-0 datetimepicker-input"
-                                            placeholder="Time" data-target="#time" data-toggle="datetimepicker" style="height: 55px;">
-                                    </div>
-                                </div>
-                                <div class="col-12">
-                                    <button class="btn btn-primary w-100 py-3" type="submit">Make An Appointment</button>
-                                </div>
+                <p class="text-white mb-5">Easily book your appointment with just a few clicks! Get timely, hassle-free access to expert healthcare.</p>
+                <a class="btn btn-dark rounded-pill py-3 px-5 me-3" href="{% url 'team' %}">Find Doctor</a>
+                <a class="btn btn-outline-dark rounded-pill py-3 px-5" href="{% url 'view_appointments' %}">View Records</a>
+            </div>
+            <div class="col-lg-6">
+                <div class="bg-white text-center rounded p-5">
+                    <h1 class="mb-4">Book An Appointment</h1>
+                    <form method="POST" action="{% url 'book_appointment' %}">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-12 col-sm-6">
+                                <input type="text" name="name" class="form-control bg-light border-0" placeholder="Your Name" required>
                             </div>
-                        </form>
-                    </div>
+                            <div class="col-12 col-sm-6">
+                                <input type="email" name="email" class="form-control bg-light border-0" placeholder="Your Email" required>
+                            </div>
+                            <div class="col-12 col-sm-6">
+                                <input type="text" name="phone" class="form-control bg-light border-0" placeholder="Phone Number" required>
+                            </div>
+                            <div class="col-12 col-sm-6">
+                                <select name="department" class="form-select bg-light border-0" required>
+                                    <option selected>Choose Department</option>
+                                    <option value="Emergency Medicine">Emergency Medicine</option>
+                                    <option value="General Medicine">General Medicine</option>
+                                    <option value="Surgery">Surgery</option>
+                                    <option value="Pediatrics">Pediatrics</option>
+                                    <option value="Gynecology and Obstetrics">Gynecology and Obstetrics</option>
+                                    <option value="Cardiology">Cardiology</option>
+                                    <option value="Neurology">Neurology</option>
+                                    <option value="Oncology">Oncology</option>
+                                    <option value="Orthopedics">Orthopedics</option>
+                                    <option value="Radiology and Imaging">Radiology and Imaging</option>
+                                    <option value="Pathology and Laboratory">Pathology and Laboratory</option>
+                                    <option value="Pharmacy">Pharmacy</option>
+                                    <option value="Psychiatry">Psychiatry</option>
+                                    <option value="Dermatology">Dermatology</option>
+                                    <option value="Endocrinology">Endocrinology</option>
+                                    <option value="Gastroenterology">Gastroenterology</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-sm-6">
+                                <select name="doctor" class="form-select bg-light border-0" required>
+                                    <option selected>Select Doctor</option>
+                                    <option value="Doctor Kiprop">Doctor Kiprop</option>
+                                    <option value="Doctor Wambwere">Doctor Wambwere</option>
+                                    <option value="Doctor Jackie">Doctor Jackie</option>
+                                    <option value="Doctor Lisper">Doctor Lisper</option>
+                                    <option value="Doctor Mirriel">Doctor Mirriel</option>
+                                    <option value="Doctor Reckie">Doctor Reckie</option>
+                                    <option value="Doctor Cherop">Doctor Cherop</option>
+                                    <option value="Doctor Ndiema">Doctor Ndiema</option>
+                                    <option value="Doctor Eli">Doctor Eli</option>
+                                    <option value="Doctor Mutai">Doctor Mutai</option>
+                                    <option value="Doctor Koech">Doctor Koech</option>
+                                </select>
+                            </div>
+                            <div class="col-12 col-sm-6">
+                                <input type="date" name="date" class="form-control bg-light border-0" required>
+                            </div>
+                            <div class="col-12 col-sm-6">
+                                <input type="time" name="time" class="form-control bg-light border-0" required>
+                            </div>
+                            <div class="col-12">
+                                <button class="btn btn-primary w-100 py-3" type="submit">Make An Appointment</button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
-    <!-- Appointment End -->
+</div>
+<!-- Appointment End -->
+
 
 
     <!-- Pricing Plan Start -->

@@ -122,3 +122,13 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Twilio Configuration
+TWILIO_ACCOUNT_SID = "ACc916ac3cd3053334b6a985b437eb1808"
+TWILIO_AUTH_TOKEN = "986e160f0d10d4ec1710415fd9b137ea"
+TWILIO_PHONE_NUMBER = "+18103807242"
+
+# Celery Settings
+CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
