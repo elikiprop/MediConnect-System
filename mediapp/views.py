@@ -1,8 +1,11 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from .models import Appointment
 
+# Home Page View
 def home(request):
     return render(request, 'index.html')
 
+# Static Page Views
 def about(request):
     return render(request, 'about.html')
 
@@ -32,3 +35,36 @@ def team(request):
 
 def testimonial(request):
     return render(request, 'testimonial.html')
+
+# Book Appointment View
+def book_appointment(request):
+    if request.method == "POST":
+        name = request.POST.get("name")
+        email = request.POST.get("email")
+        phone = request.POST.get("phone")
+        department = request.POST.get("department")
+        doctor = request.POST.get("doctor")
+        date = request.POST.get("date")
+        time = request.POST.get("time")
+
+        # Save Appointment
+        appointment = Appointment(
+            name=name,
+            email=email,
+            phone=phone,
+            department=department,
+            doctor=doctor,
+            date=date,
+            time=time
+        )
+        appointment.save()
+        
+        # Redirect to View Appointments
+        return redirect("{% url 'view_appointment' %}")  # Ensure this name matches urls.py
+
+    return render(request, "appointment.html")
+
+# View All Appointments
+def view_appointments(request):
+    appointments = Appointment.objects.all()  # Fetch all bookings
+    return render(request, "view_appointments.html", {"appointments": appointments})
