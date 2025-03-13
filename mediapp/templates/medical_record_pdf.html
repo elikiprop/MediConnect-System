@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Medical Record PDF</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .container { width: 100%; max-width: 800px; margin: auto; }
+        .header { text-align: center; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        table, th, td { border: 1px solid black; padding: 10px; text-align: left; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Medical Record</h2>
+        </div>
+        <table>
+            <tr><th>Patient Name</th><td>{{ record.patient_name }}</td></tr>
+            <tr><th>Doctor Name</th><td>{{ record.doctor_name }}</td></tr>
+            <tr><th>Diagnosis</th><td>{{ record.diagnosis }}</td></tr>
+            <tr><th>Medication</th><td>{{ record.medication }}</td></tr>
+            <tr><th>Referred To</th><td>{{ record.referred_to }}</td></tr>
+            <tr><th>Department Sent To</th><td>{{ record.department_sent_to }}</td></tr>
+            <tr><th>Date Created</th><td>{{ record.created_at }}</td></tr>
+        </table>
+    </div>
+</body>
+</html>

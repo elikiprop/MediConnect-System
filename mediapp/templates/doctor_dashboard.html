@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Doctor Dashboard{% endblock %}
+
+{% block content %}
+<h2>Doctor Dashboard</h2>
+<a href="{% url 'add_medical_record' %}" class="btn btn-primary">Add New Medical Record</a>
+<a href="{% url 'refer_patient' %}" class="btn btn-secondary">Refer Patient</a>
+
+<table class="table table-bordered">
+    <tr>
+        <th>Patient</th>
+        <th>Doctor</th>
+        <th>Diagnosis</th>
+        <th>Medication</th>
+        <th>Actions</th>
+    </tr>
+    {% for record in records %}
+    <tr>
+        <td>{{ record.patient_name }}</td>
+        <td>{{ record.doctor_name }}</td>
+        <td>{{ record.diagnosis }}</td>
+        <td>{{ record.medication }}</td>
+        <td>
+            <a href="{% url 'edit_medical_record' record.id %}" class="btn btn-warning">Edit</a>
+        </td>
+    </tr>
+    {% empty %}
+    <tr>
+        <td colspan="5">No records found</td>
+    </tr>
+    {% endfor %}
+</table>
+{% endblock %}

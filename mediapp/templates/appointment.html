@@ -20,6 +20,9 @@
             <div class="col-lg-6">
                 <div class="bg-white text-center rounded p-5">
                     <h1 class="mb-4">Book An Appointment</h1>
+                    {% if error %}
+                    <div class="alert alert-danger">{{ error }}</div>  <!-- Show Error if date/time is invalid -->
+                    {% endif %}
                     <form method="POST" action="{% url 'book_appointment' %}">
                         {% csrf_token %}
                         <div class="row g-3">
@@ -70,10 +73,10 @@
                                 </select>
                             </div>
                             <div class="col-12 col-sm-6">
-                                <input type="date" name="date" class="form-control bg-light border-0" required>
+                                <input type="date" id="appointment-date" name="date" class="form-control bg-light border-0" required>
                             </div>
                             <div class="col-12 col-sm-6">
-                                <input type="time" name="time" class="form-control bg-light border-0" required>
+                                <input type="time" id="appointment-time" name="time" class="form-control bg-light border-0" required>
                             </div>
                             <div class="col-12">
                                 <button class="btn btn-primary w-100 py-3" type="submit">Make An Appointment</button>
@@ -87,5 +90,11 @@
 </div>
 <!-- Appointment End -->
 
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    let today = new Date().toISOString().split("T")[0];
+    document.getElementById("appointment-date").setAttribute("min", today);
+});
+</script>
 
 {% endblock %}

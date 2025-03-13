@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Reschedule Appointment{% endblock %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="col-md-6 bg-white p-4 shadow rounded">
+        <h2 class="text-center mb-4">Reschedule Appointment</h2>
+        
+        {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="date" class="form-label">New Date</label>
+                <input type="date" name="date" id="date" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="time" class="form-label">New Time</label>
+                <input type="time" name="time" id="time" class="form-control" required>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <a href="{% url 'view_appointments' %}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">Reschedule</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

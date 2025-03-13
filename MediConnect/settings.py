@@ -14,6 +14,8 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+LOGIN_URL = "login"
+
 
 
 # Quick-start development settings - unsuitable for production
@@ -136,3 +138,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = "elikiprop42@gmail.com"  # Your email
 EMAIL_HOST_PASSWORD = "zkjiokaotdyflbdd"  # App password (not your normal email password)
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+import pdfkit
+
+PDFKIT_CONFIG = pdfkit.configuration(wkhtmltopdf="C:/Users/Eli Kiprop/Documents/wkhtmltopdf/bin/wkhtmltopdf.exe")
