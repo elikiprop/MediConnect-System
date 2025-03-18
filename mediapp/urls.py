@@ -20,26 +20,26 @@ urlpatterns = [
     path("team/", views.team, name="team"),
     path("testimonial/", views.testimonial, name="testimonial"),
 
-    # ✅ Dashboards
+    # ✅ Dashboards (Matching Views)
     path("patient-dashboard/", views.patient_dashboard, name="patient_dashboard"),
     path("doctor-dashboard/", views.doctor_dashboard, name="doctor_dashboard"),
     path("admin-dashboard/", views.admin_dashboard, name="admin_dashboard"),
 
-    # ✅ Appointments
+    # ✅ Appointments (Corrected Naming)
     path("book-appointment/", views.book_appointment, name="book_appointment"),
     path("view-appointments/", views.view_appointments, name="view_appointments"),
     path("delete-appointment/<int:appointment_id>/", views.delete_appointment, name="delete_appointment"),
     path("reschedule-appointment/<int:appointment_id>/", views.reschedule_appointment, name="reschedule_appointment"),
 
-    # ✅ Video & Voice Calls
+    # ✅ Video & Voice Calls (Consistent Naming)
     path("notify-doctor-video-call/<int:appointment_id>/", views.notify_doctor_video_call, name="notify_doctor_video_call"),
     path("notify-doctor-voice-call/<int:appointment_id>/", views.notify_doctor_voice_call, name="notify_doctor_voice_call"),
 
-    # ✅ Medical Records
+    # ✅ Medical Records (Consistent with Views)
     path("add-medical-record/", views.add_edit_medical_record, name="add_medical_record"),
     path("edit-medical-record/<int:record_id>/", views.add_edit_medical_record, name="edit_medical_record"),
-    path("generate-medical-record-pdf/<int:record_id>/", views.generate_pdf, name="generate_pdf"),
+    path("generate-pdf/<int:record_id>/", views.generate_pdf, name="generate_pdf"),  
 
-    # ✅ Patient Referral
+    # ✅ Patient Referral (Consistent with View)
     path("refer-patient/", views.refer_patient, name="refer_patient"),
 ]

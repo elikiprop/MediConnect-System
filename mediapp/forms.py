@@ -19,7 +19,7 @@ class MedicalRecordForm(forms.ModelForm):
 
 class PatientReferralForm(forms.ModelForm):
     referred_doctor = forms.ModelChoiceField(
-        queryset=UserProfile.objects.filter(role="doctor"),  # Only show doctors in dropdown
+        queryset=UserProfile.objects.filter(role="doctor"),
         empty_label="Select Doctor",
         widget=forms.Select(attrs={"class": "form-control"}),
     )
@@ -29,7 +29,7 @@ class PatientReferralForm(forms.ModelForm):
         fields = ["patient_name", "referring_doctor", "referred_doctor", "reason"]
         widgets = {
             "patient_name": forms.TextInput(attrs={"class": "form-control"}),
-            "referring_doctor": forms.TextInput(attrs={"class": "form-control", "readonly": True}),  # Auto-filled by logged-in doctor
+            "referring_doctor": forms.HiddenInput(),  # Auto-filled from the logged-in user
             "reason": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
         }
 
@@ -41,7 +41,7 @@ class RegisterForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ["username", "email", "password", "confirm_password"]
+        fields = ["username", "email", "password"]  # Excluded confirm_password
 
     def clean(self):
         cleaned_data = super().clean()
@@ -58,10 +58,27 @@ class RegisterForm(forms.ModelForm):
         user.set_password(self.cleaned_data["password"])  # Hash password before saving
         if commit:
             user.save()
-            UserProfile.objects.create(user=user, role=self.cleaned_data["role"])  # Assign role
+            UserProfile.objects.create(user=user, role=self.cleaned_data["role"])  # Create associated profile
         return user
 
 
 class LoginForm(forms.Form):
     username = forms.CharField(widget=forms.TextInput(attrs={"class": "form-control"}))
     password = forms.CharField(widget=forms.PasswordInput(attrs={"class": "form-control"}))
+
+
+class ContactForm(forms.Form):
+    name = forms.CharField(
+        max_length=100, 
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Your Name"})
+    )
+    email = forms.EmailField(
+        widget=forms.EmailInput(attrs={"class": "form-control", "placeholder": "Your Email"})
+    )
+    subject = forms.CharField(
+        max_length=200, 
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Subject"})
+    )
+    message = forms.CharField(
+        widget=forms.Textarea(attrs={"class": "form-control", "placeholder": "Message", "rows": 5}) 
+    )
