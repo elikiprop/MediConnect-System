@@ -13,33 +13,7 @@ from .forms import ContactForm
 from django.core.mail import send_mail
 from django.contrib import messages
 from .models import Appointment, MedicalRecord, UserProfile
-
-
-def contact(request):
-    if request.method == "POST":
-        form = ContactForm(request.POST)
-        if form.is_valid():
-            name = form.cleaned_data['name']
-            email = form.cleaned_data['email']
-            subject = form.cleaned_data['subject']
-            message = form.cleaned_data['message']
-
-            # Send an email (configure settings.py for email sending)
-            send_mail(
-                f"New Contact Form Submission: {subject}",
-                f"Name: {name}\nEmail: {email}\n\nMessage:\n{message}",
-                email,  # From email
-                ['your-email@example.com'],  # Change this to your email
-                fail_silently=False,
-            )
-
-            messages.success(request, "Your message has been sent successfully!")
-            return redirect('contact')  # Redirect to the contact page after submission
-
-    else:
-        form = ContactForm()
-
-    return render(request, 'contact.html', {'form': form})
+from django.shortcuts import render, redirect
 
 # ✅ Home Page (Requires Login)
 @login_required(login_url='login')
@@ -297,16 +271,10 @@ def user_login(request):
         form = LoginForm()
     return render(request, "login.html", {"form": form})
 
-
 # ✅ Logout
 def user_logout(request):
     logout(request)
     return redirect("login")
-
-from django.contrib.auth import authenticate, login
-from django.shortcuts import render, redirect
-from .models import UserProfile
-from .forms import LoginForm
 
 def user_login(request):
     if request.method == "POST":
