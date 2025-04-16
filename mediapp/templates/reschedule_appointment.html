@@ -6,21 +6,38 @@
 <div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
     <div class="col-md-6 bg-white p-4 shadow rounded">
         <h2 class="text-center mb-4">Reschedule Appointment</h2>
-        
+
         {% if error %}
             <div class="alert alert-danger">{{ error }}</div>
         {% endif %}
 
         <form method="POST">
             {% csrf_token %}
+            
+            <!-- New Date Field -->
             <div class="mb-3">
                 <label for="date" class="form-label">New Date</label>
-                <input type="date" name="date" id="date" class="form-control" required>
+                <input type="date" name="date" id="date" class="form-control" required value="{{ form.date.value|default:'' }}">
+                {% if form.date.errors %}
+                    <div class="text-danger">
+                        {% for error in form.date.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
             </div>
 
+            <!-- New Time Field -->
             <div class="mb-3">
                 <label for="time" class="form-label">New Time</label>
-                <input type="time" name="time" id="time" class="form-control" required>
+                <input type="time" name="time" id="time" class="form-control" required value="{{ form.time.value|default:'' }}">
+                {% if form.time.errors %}
+                    <div class="text-danger">
+                        {% for error in form.time.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
             </div>
 
             <div class="d-flex justify-content-between">

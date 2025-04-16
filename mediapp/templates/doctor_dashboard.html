@@ -2,32 +2,259 @@
 {% block title %}Doctor Dashboard{% endblock %}
 
 {% block content %}
-<h2>Doctor Dashboard</h2>
-<a href="{% url 'add_medical_record' %}" class="btn btn-primary">Add New Medical Record</a>
-<a href="{% url 'refer_patient' %}" class="btn btn-secondary">Refer Patient</a>
+<div class="container" style="margin-top: 2rem; padding: 1rem;">
+    <div class="dashboard-header" style="margin-bottom: 1.5rem;">
+        <h2 style="font-weight: 600; color: #333;">Doctor Dashboard</h2>
+    </div>
+    
+    <!-- Buttons Section -->
+    <div class="dashboard-buttons" style="background-color: #f8f9fa; padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 2rem;">
+        <h3 style="color: #495057; margin-bottom: 1rem;">Add Medical Record</h3>
+        {% if patients %}
+            <form method="get" style="margin-bottom: 1.5rem;">
+                <div class="form-group">
+                    <label for="patient_id" style="font-weight: 500;">Select Patient</label>
+                    <select name="patient_id" id="patient_id" class="form-control" style="height: 45px; border-radius: 4px; border: 1px solid #ced4da;" onchange="if(this.value) window.location.href='{% url 'add_medical_record' 0 %}'.replace('0', this.value)">
+                        <option value="">Select a patient</option>
+                        {% for patient in patients %}
+                            <option value="{{ patient.id }}">{{ patient.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
+        {% else %}
+            <p style="color: #6c757d; font-style: italic;">No patients available.</p>
+        {% endif %}
+        
+        <h3 style="color: #495057; margin-bottom: 1rem; margin-top: 1.5rem;">Consultations</h3>
+        <a href="https://meet.google.com/bdu-vfen-nwx" class="btn btn-warning" style="background-color: #ffc107; color: #212529; border: none; margin-right: 10px; padding: 8px 16px; border-radius: 4px;" target="_blank">Start Video Consultation</a>
+        <a href="https://meet.google.com/bdu-vfen-nwx" class="btn btn-dark" style="background-color: #343a40; color: #fff; border: none; padding: 8px 16px; border-radius: 4px;" target="_blank">Start Voice Call</a>
+    
+        <h3 style="color: #495057; margin-bottom: 1rem; margin-top: 1.5rem;">Referrals</h3>
+        <a href="{% url 'refer_patient' %}" class="btn btn-secondary" style="background-color: #6c757d; color: #fff; border: none; padding: 8px 16px; border-radius: 4px;">Refer Patient</a>
+    </div>
 
-<table class="table table-bordered">
-    <tr>
-        <th>Patient</th>
-        <th>Doctor</th>
-        <th>Diagnosis</th>
-        <th>Medication</th>
-        <th>Actions</th>
-    </tr>
-    {% for record in records %}
-    <tr>
-        <td>{{ record.patient_name }}</td>
-        <td>{{ record.doctor_name }}</td>
-        <td>{{ record.diagnosis }}</td>
-        <td>{{ record.medication }}</td>
-        <td>
-            <a href="{% url 'edit_medical_record' record.id %}" class="btn btn-warning">Edit</a>
-        </td>
-    </tr>
-    {% empty %}
-    <tr>
-        <td colspan="5">No records found</td>
-    </tr>
-    {% endfor %}
-</table>
+    <div class="table-section" style="margin-bottom: 2rem;">
+        <h3 style="color: #495057; margin-bottom: 1rem;">Recent Medical Records</h3>
+        <div class="table-responsive" style="border-radius: 0.5rem; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+            <table class="table table-bordered" style="margin-bottom: 0; width: 100%; border-collapse: collapse;">
+                <thead style="background-color: #f8f9fa;">
+                    <tr>
+                        <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Patient</th>
+                        <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Doctor</th>
+                        <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Diagnosis</th>
+                        <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Medication</th>
+                        <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in records %}
+                    <tr>
+                        <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ record.patient.username }}</td>
+                        <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ record.doctor.user.username }}</td>
+                        <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ record.diagnosis }}</td>
+                        <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ record.medication }}</td>
+                        <td class="action-buttons" style="padding: 12px 15px; border: 1px solid #dee2e6;">
+                            <button type="button" class="btn btn-warning btn-sm edit-record-btn" 
+                                    style="background-color: #ffc107; color: #212529; border: none; padding: 5px 10px; border-radius: 3px; margin-right: 5px;"
+                                    data-toggle="modal" 
+                                    data-target="#editRecordModal" 
+                                    data-id="{{ record.id }}" 
+                                    data-patient="{{ record.patient.username|escapejs }}" 
+                                    data-diagnosis="{{ record.diagnosis|escapejs }}" 
+                                    data-medication="{{ record.medication|escapejs }}">
+                                Edit
+                            </button>
+                            <a href="{% url 'generate_pdf' record.id %}" class="btn btn-primary btn-sm" style="background-color: #007bff; color: #fff; border: none; padding: 5px 10px; border-radius: 3px;">PDF</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center" style="padding: 12px 15px; border: 1px solid #dee2e6;">No medical records found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="table-section" style="margin-bottom: 2rem;">
+        <h3 style="color: #495057; margin-bottom: 1rem;">Recent Referrals</h3>
+        <div class="table-responsive" style="border-radius: 0.5rem; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+            <table class="table table-bordered" style="margin-bottom: 0; width: 100%; border-collapse: collapse;">
+                <thead style="background-color: #f8f9fa;">
+                    <tr>
+                        <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Patient</th>
+                        <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Referring Doctor</th>
+                        <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Referred Doctor</th>
+                        <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Reason</th>
+                        <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for referral in referrals %}
+                    <tr>
+                        <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ referral.patient.username }}</td>
+                        <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ referral.referring_doctor.user.username }}</td>
+                        <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ referral.referred_doctor.user.username }}</td>
+                        <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ referral.reason }}</td>
+                        <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ referral.status }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center" style="padding: 12px 15px; border: 1px solid #dee2e6;">No referrals found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="table-section" style="margin-bottom: 2rem;">
+        <h3 style="color: #495057; margin-bottom: 1rem;">Upcoming Appointments</h3>
+        <div class="table-responsive" style="border-radius: 0.5rem; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+            <table class="table table-bordered" style="margin-bottom: 0; width: 100%; border-collapse: collapse;">
+                <thead style="background-color: #f8f9fa;">
+                    <tr>
+                        <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Patient</th>
+                        <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Doctor</th>
+                        <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Date</th>
+                        <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Time</th>
+                        <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Department</th>
+                        <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Meeting Links</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appointment in appointments %}
+                    <tr>
+                        <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ appointment.patient.username|default:appointment.name }}</td>
+                        <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ appointment.doctor.user.username }}</td>
+                        <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ appointment.date }}</td>
+                        <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ appointment.time }}</td>
+                        <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ appointment.department }}</td>
+                        <td class="meeting-links" style="padding: 12px 15px; border: 1px solid #dee2e6;">
+                            {% if appointment.video_call_link %}
+                            <a href="https://meet.google.com/bdu-vfen-nwx" class="btn btn-warning btn-sm" style="background-color: #ffc107; color: #212529; border: none; padding: 5px 10px; border-radius: 3px; margin-right: 5px;" target="_blank">Start Video Consultation</a>
+                            {% endif %}
+                            {% if appointment.voice_call_link %}
+                            <a href="https://meet.google.com/bdu-vfen-nwx" class="btn btn-dark btn-sm" style="background-color: #343a40; color: #fff; border: none; padding: 5px 10px; border-radius: 3px;" target="_blank">Start Voice Call</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center" style="padding: 12px 15px; border: 1px solid #dee2e6;">No appointments found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Medical Record Modal -->
+<div class="modal fade" id="editRecordModal" tabindex="-1" role="dialog" aria-labelledby="editRecordModalLabel" aria-hidden="true" style="font-family: Arial, sans-serif;">
+    <div class="modal-dialog" role="document" style="max-width: 500px; margin: 1.75rem auto;">
+        <div class="modal-content" style="border-radius: 0.5rem; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+            <div class="modal-header" style="background-color: #f8f9fa; border-bottom: 1px solid #dee2e6; padding: 1rem 1.5rem;">
+                <h5 class="modal-title" id="editRecordModalLabel" style="font-weight: 600; color: #495057;">Edit Medical Record</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="background: none; border: none; font-size: 1.5rem; color: #6c757d; cursor: pointer;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="editRecordForm" method="POST">
+                {% csrf_token %}
+                <div class="modal-body" style="padding: 1.5rem;">
+                    <input type="hidden" id="record_id" name="record_id">
+                    
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label for="patientName" style="font-weight: 500; color: #495057; margin-bottom: 0.5rem; display: block;">Patient</label>
+                        <input type="text" class="form-control" id="patientName" readonly style="height: 45px; padding: 0.375rem 0.75rem; font-size: 1rem; line-height: 1.5; color: #495057; background-color: #f8f9fa; border: 1px solid #ced4da; border-radius: 0.25rem; width: 100%;">
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label for="diagnosis" style="font-weight: 500; color: #495057; margin-bottom: 0.5rem; display: block;">Diagnosis</label>
+                        <textarea class="form-control" id="diagnosis" name="diagnosis" rows="3" required style="padding: 0.375rem 0.75rem; font-size: 1rem; line-height: 1.5; color: #495057; background-color: #fff; border: 1px solid #ced4da; border-radius: 0.25rem; width: 100%;"></textarea>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label for="medication" style="font-weight: 500; color: #495057; margin-bottom: 0.5rem; display: block;">Medication</label>
+                        <textarea class="form-control" id="medication" name="medication" rows="3" required style="padding: 0.375rem 0.75rem; font-size: 1rem; line-height: 1.5; color: #495057; background-color: #fff; border: 1px solid #ced4da; border-radius: 0.25rem; width: 100%;"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer" style="background-color: #f8f9fa; border-top: 1px solid #dee2e6; padding: 1rem 1.5rem;">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" style="background-color: #6c757d; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; margin-right: 10px;">Close</button>
+                    <button type="submit" class="btn btn-primary" style="background-color: #007bff; color: #fff; border: none; padding: 8px 16px; border-radius: 4px;">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for handling the modal - ensure it loads after jQuery -->
+<script>
+// Wait for the document to be fully loaded
+// Add this to the script section in your template
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof jQuery !== 'undefined') {
+        // Add event listener to the Edit buttons
+        $('.edit-record-btn').on('click', function() {
+            var recordId = $(this).data('id');
+            var patient = $(this).data('patient');
+            var diagnosis = $(this).data('diagnosis');
+            var medication = $(this).data('medication');
+            
+            // Populate the form fields with data from the database
+            $('#record_id').val(recordId);
+            $('#patientName').val(patient);
+            $('#diagnosis').val(diagnosis);
+            $('#medication').val(medication);
+            
+            // Set the form action URL
+            $('#editRecordForm').attr('action', "{% url 'update_medical_record' 0 %}".replace('0', recordId));
+            
+            // Display the modal
+            $('#editRecordModal').modal('show');
+        });
+
+        // Handle form submission with AJAX header
+        $('#editRecordForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            $.ajax({
+                url: $(this).attr('action'),
+                type: 'POST',
+                data: $(this).serialize(),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        // Hide the modal
+                        $('#editRecordModal').modal('hide');
+                        
+                        // Show success message
+                        alert('Medical record updated successfully!');
+                        
+                        // Reload the page to show the updated data
+                        location.reload();
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('An error occurred while updating the record.');
+                }
+            });
+        });
+    } else {
+        console.error('jQuery is not loaded! Make sure jQuery is included before this script.');
+    }
+});
+</script>
+
+<!-- Ensure Bootstrap and jQuery are loaded if not in the base template -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.min.js"></script>
 {% endblock %}

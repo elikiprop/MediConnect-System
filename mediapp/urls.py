@@ -2,44 +2,33 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # ✅ Authentication Routes
-    path("register/", views.register, name="register"),
-    path("login/", views.user_login, name="login"),
-    path("logout/", views.user_logout, name="logout"),
-
-    # ✅ Home Page & Static Pages
-    path("", views.home, name="home"),
-    path("about/", views.about, name="about"),
-    path("appointment/", views.appointment, name="appointment"),
-    path("blog/", views.blog, name="blog"),
-    path("contact/", views.contact, name="contact"),
-    path("detail/", views.detail, name="detail"),
-    path("price/", views.price, name="price"),
-    path("search/", views.search, name="search"),
-    path("service/", views.service, name="service"),
-    path("team/", views.team, name="team"),
-    path("testimonial/", views.testimonial, name="testimonial"),
-
-    # ✅ Dashboards (Matching Views)
-    path("patient-dashboard/", views.patient_dashboard, name="patient_dashboard"),
-    path("doctor-dashboard/", views.doctor_dashboard, name="doctor_dashboard"),
-    path("admin-dashboard/", views.admin_dashboard, name="admin_dashboard"),
-
-    # ✅ Appointments (Corrected Naming)
-    path("book-appointment/", views.book_appointment, name="book_appointment"),
-    path("view-appointments/", views.view_appointments, name="view_appointments"),
-    path("delete-appointment/<int:appointment_id>/", views.delete_appointment, name="delete_appointment"),
-    path("reschedule-appointment/<int:appointment_id>/", views.reschedule_appointment, name="reschedule_appointment"),
-
-    # ✅ Video & Voice Calls (Consistent Naming)
-    path("notify-doctor-video-call/<int:appointment_id>/", views.notify_doctor_video_call, name="notify_doctor_video_call"),
-    path("notify-doctor-voice-call/<int:appointment_id>/", views.notify_doctor_voice_call, name="notify_doctor_voice_call"),
-
-    # ✅ Medical Records (Consistent with Views)
-    path("add-medical-record/", views.add_edit_medical_record, name="add_medical_record"),
-    path("edit-medical-record/<int:record_id>/", views.add_edit_medical_record, name="edit_medical_record"),
-    path("generate-pdf/<int:record_id>/", views.generate_pdf, name="generate_pdf"),  
-
-    # ✅ Patient Referral (Consistent with View)
-    path("refer-patient/", views.refer_patient, name="refer_patient"),
+    path('', views.home, name='home'),
+    path('about/', views.about, name='about'),
+    path('service/', views.service, name='service'),
+    path('price/', views.price, name='price'),
+    path('contact/', views.contact, name='contact'),
+    path('team/', views.team, name='team'),
+    path('blog/', views.blog, name='blog'),
+    path('detail/', views.detail, name='detail'),
+    path('testimonial/', views.testimonial, name='testimonial'),
+    path('search/', views.search, name='search'),
+    path('appointment/', views.appointment, name='appointment'),
+    path('book-appointment/', views.book_appointment, name='book_appointment'),
+    path('patient-dashboard/', views.patient_dashboard, name='patient_dashboard'),
+    path('view-appointments/', views.view_appointments, name='view_appointments'),
+    path('reschedule-appointment/<int:appointment_id>/', views.reschedule_appointment, name='reschedule_appointment'),
+    path('delete-appointment/<int:appointment_id>/', views.delete_appointment, name='delete_appointment'),
+    path('doctor-dashboard/', views.doctor_dashboard, name='doctor_dashboard'),
+    path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('refer-patient/', views.refer_patient, name='refer_patient'),
+    path('login/', views.user_login, name='login'),
+    path('register/', views.register, name='register'),
+    path('logout/', views.user_logout, name='logout'),
+    path('notify-doctor/<int:appointment_id>/<str:call_type>/', views.notify_doctor, name='notify_doctor'),
+    path('add-medical-record/<int:patient_id>/', views.add_medical_record, name='add_medical_record'),
+    path('generate-pdf/<int:record_id>/', views.generate_pdf, name='generate_pdf'),
+    path('start-video-call/', views.start_video_call, name='start_video_call'),
+    path('start-voice-call/', views.start_voice_call, name='start_voice_call'),
+    path('update_medical_record/<int:record_id>/', views.update_medical_record, name='update_medical_record'),
+    path('delete-record/<int:record_id>/', views.delete_record, name='delete_record')
 ]

@@ -1,29 +1,50 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Medical Record PDF</title>
+    <title>Medical Record</title>
     <style>
-        body { font-family: Arial, sans-serif; }
-        .container { width: 100%; max-width: 800px; margin: auto; }
-        .header { text-align: center; margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; }
-        table, th, td { border: 1px solid black; padding: 10px; text-align: left; }
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .record-details {
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h2>Medical Record</h2>
-        </div>
-        <table>
-            <tr><th>Patient Name</th><td>{{ record.patient_name }}</td></tr>
-            <tr><th>Doctor Name</th><td>{{ record.doctor_name }}</td></tr>
-            <tr><th>Diagnosis</th><td>{{ record.diagnosis }}</td></tr>
-            <tr><th>Medication</th><td>{{ record.medication }}</td></tr>
-            <tr><th>Referred To</th><td>{{ record.referred_to }}</td></tr>
-            <tr><th>Department Sent To</th><td>{{ record.department_sent_to }}</td></tr>
-            <tr><th>Date Created</th><td>{{ record.created_at }}</td></tr>
-        </table>
+    <div class="header">
+        <h1>Medical Record</h1>
     </div>
+    
+    <div class="record-details">
+        <p><strong>Patient:</strong> {{ record.patient.get_full_name }}</p>
+        <p><strong>Doctor:</strong> {{ record.doctor }}</p>
+        <p><strong>Date:</strong> {{ record.created_at|date:"F j, Y" }}</p>
+    </div>
+    
+    <div class="diagnosis">
+        <h2>Diagnosis</h2>
+        <p>{{ record.diagnosis }}</p>
+    </div>
+    
+    <div class="medication">
+        <h2>Medication</h2>
+        <p>{{ record.medication }}</p>
+    </div>
+    
+    {% if record.referred_to %}
+    <div class="referral">
+        <h2>Referral</h2>
+        <p>Referred to: {{ record.referred_to }}</p>
+        {% if record.department_sent_to %}
+        <p>Department: {{ record.department_sent_to }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
 </body>
 </html>

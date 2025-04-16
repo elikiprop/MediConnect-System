@@ -1,8 +1,104 @@
 {% extends 'base.html' %}
-{% block title %}Patient Dashboard{% endblock %}
+   {% block title %}Patient Dashboard{% endblock %}
 
-{% block content %}
-<div class="container">
-    <h2 class="text-center mt-5">Welcome to the Patient Dashboard</h2>
-</div>
-{% endblock %}
+   {% block content %}
+   <div class="container mt-5">
+       <h2 class="text-center mb-4">Welcome, {{ user.username }}!</h2>
+
+       <!-- Medical Records -->
+       <h3>Your Medical Records</h3>
+       <table class="table table-bordered mb-5">
+           <thead>
+               <tr>
+                   <th>Doctor</th>
+                   <th>Diagnosis</th>
+                   <th>Medication</th>
+                   <th>Date</th>
+               </tr>
+           </thead>
+           <tbody>
+               {% for record in records %}
+               <tr>
+                   <td>{{ record.doctor.user.username }}</td>
+                   <td>{{ record.diagnosis }}</td>
+                   <td>{{ record.medication }}</td>
+                   <td>{{ record.created_at|date:"Y-m-d" }}</td>
+               </tr>
+               {% empty %}
+               <tr>
+                   <td colspan="4">No medical records found.</td>
+               </tr>
+               {% endfor %}
+           </tbody>
+       </table>
+
+       <!-- Appointments -->
+       <h3>Your Appointments</h3>
+       <div class="mb-3">
+           <a href="{% url 'appointment' %}" class="btn btn-primary">Add New Appointment</a>
+       </div>
+       <table class="table table-bordered">
+           <thead>
+               <tr>
+                   <th>Doctor</th>
+                   <th>Department</th>
+                   <th>Date</th>
+                   <th>Time</th>
+                   <th>Actions</th>
+               </tr>
+           </thead>
+           <tbody>
+               {% for appointment in appointments %}
+               <tr>
+                   <td>{{ appointment.doctor.user.username }}</td>
+                   <td>{{ appointment.department }}</td>
+                   <td>{{ appointment.date }}</td>
+                   <td>{{ appointment.time }}</td>
+                   <td>
+                       {% if appointment.video_call_link %}
+                           <a href="{{ appointment.video_call_link }}" class="btn btn-warning btn-sm" target="_blank">Join Video Call</a>
+                       {% endif %}
+                       <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#rescheduleModal{{ appointment.id }}">Reschedule</button>
+                       <form action="{% url 'delete_appointment' appointment.id %}" method="post" style="display:inline;">
+                           {% csrf_token %}
+                           <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this appointment?');">Delete</button>
+                       </form>
+                   </td>
+               </tr>
+               <!-- Reschedule Modal -->
+               <div class="modal fade" id="rescheduleModal{{ appointment.id }}" tabindex="-1" aria-labelledby="rescheduleModalLabel{{ appointment.id }}" aria-hidden="true">
+                   <div class="modal-dialog">
+                       <div class="modal-content">
+                           <div class="modal-header">
+                               <h5 class="modal-title" id="rescheduleModalLabel{{ appointment.id }}">Reschedule Appointment</h5>
+                               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                           </div>
+                           <form action="{% url 'reschedule_appointment' appointment.id %}" method="post">
+                               {% csrf_token %}
+                               <div class="modal-body">
+                                   <div class="mb-3">
+                                       <label for="date{{ appointment.id }}" class="form-label">New Date</label>
+                                       <input type="date" class="form-control" id="date{{ appointment.id }}" name="date" required min="{% now 'Y-m-d' %}">
+                                   </div>
+                                   <div class="mb-3">
+                                       <label for="time{{ appointment.id }}" class="form-label">New Time</label>
+                                       <input type="time" class="form-control" id="time{{ appointment.id }}" name="time" required>
+                                   </div>
+                               </div>
+                               <div class="modal-footer">
+                                   <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                   <button type="submit" class="btn btn-primary">Save Changes</button>
+                               </div>
+                           </form>
+                       </div>
+                   </div>
+               </div>
+               {% empty %}
+               <tr>
+                   <td colspan="5">No appointments found.</td>
+               </tr>
+               {% endfor %}
+           </tbody>
+       </table>
+   </div>
+   {% endblock %}

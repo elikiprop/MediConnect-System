@@ -1,40 +1,71 @@
 {% extends "base.html" %}
 
-{% block title %}Refer Patient{% endblock %}
+   {% block title %}Refer Patient{% endblock %}
 
-{% block content %}
-<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
-    <div class="card shadow p-4" style="width: 50%; max-width: 600px;">
-        <h2 class="text-center mb-4">Refer a Patient</h2>
-        
-        <form method="post">
-            {% csrf_token %}
+   {% block content %}
+   <div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+       <div class="card shadow p-4" style="width: 50%; max-width: 600px;">
+           <h2 class="text-center mb-4">Refer a Patient</h2>
+           <form method="post">
+               {% csrf_token %}
+               <!-- Patient -->
+               <div class="mb-3">
+                   <label class="form-label" for="{{ form.patient.id_for_label }}">Patient</label>
+                   {{ form.patient }}
+                   {% if form.patient.errors %}
+                       <div class="text-danger">
+                           {% for error in form.patient.errors %}
+                               <p>{{ error }}</p>
+                           {% endfor %}
+                       </div>
+                   {% endif %}
+               </div>
 
-            <div class="mb-3">
-                <label class="form-label">Patient Name</label>
-                {{ form.patient_name }}
-            </div>
+               <!-- Referred Doctor -->
+               <div class="mb-3">
+                   <label class="form-label" for="{{ form.referred_doctor.id_for_label }}">Referred Doctor</label>
+                   {{ form.referred_doctor }}
+                   {% if form.referred_doctor.errors %}
+                       <div class="text-danger">
+                           {% for error in form.referred_doctor.errors %}
+                               <p>{{ error }}</p>
+                           {% endfor %}
+                       </div>
+                   {% endif %}
+               </div>
 
-            <div class="mb-3">
-                <label class="form-label">Referring Doctor</label>
-                {{ form.referring_doctor }}
-            </div>
+               <!-- Reason for Referral -->
+               <div class="mb-3">
+                   <label class="form-label" for="{{ form.reason.id_for_label }}">Reason for Referral</label>
+                   {{ form.reason }}
+                   {% if form.reason.errors %}
+                       <div class="text-danger">
+                           {% for error in form.reason.errors %}
+                               <p>{{ error }}</p>
+                           {% endfor %}
+                       </div>
+                   {% endif %}
+               </div>
 
-            <div class="mb-3">
-                <label class="form-label">Referred Doctor</label>
-                {{ form.referred_doctor }}
-            </div>
+               <!-- Department -->
+               <div class="mb-3">
+                   <label class="form-label" for="{{ form.department.id_for_label }}">Department</label>
+                   {{ form.department }}
+                   {% if form.department.errors %}
+                       <div class="text-danger">
+                           {% for error in form.department.errors %}
+                               <p>{{ error }}</p>
+                           {% endfor %}
+                       </div>
+                   {% endif %}
+               </div>
 
-            <div class="mb-3">
-                <label class="form-label">Reason for Referral</label>
-                {{ form.reason }}
-            </div>
-
-            <div class="d-flex justify-content-between">
-                <a href="{% url 'doctor_dashboard' %}" class="btn btn-secondary">← Back to Medical Records</a>
-                <button type="submit" class="btn btn-primary">Submit Referral</button>
-            </div>
-        </form>
-    </div>
-</div>
-{% endblock %}
+               <!-- Submit Button and Back Button -->
+               <div class="d-flex justify-content-between">
+                   <a href="{% url 'doctor_dashboard' %}" class="btn btn-secondary">← Back to Dashboard</a>
+                   <button type="submit" class="btn btn-primary">Submit Referral</button>
+               </div>
+           </form>
+       </div>
+   </div>
+   {% endblock %}

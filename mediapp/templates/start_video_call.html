@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Start Video Consultation{% endblock %}
+
+{% block content %}
+<div class="container d-flex flex-column justify-content-center align-items-center" style="min-height: 80vh;">
+    <h2 class="text-center mb-4">Video Consultation</h2>
+    <p class="text-center mb-4">This page will allow the doctor to start a video call with the patient.</p>
+
+    <!-- Start Consultation Button -->
+    <div class="d-flex justify-content-center mb-4">
+        <a href="{% url 'start_video_call' %}" class="btn btn-success btn-lg">Start Video Call</a>
+    </div>
+
+    <!-- Back to Dashboard Button -->
+    <a href="{% url 'doctor_dashboard' %}" class="btn btn-secondary">← Back to Medical Records</a>
+</div>
+{% endblock %}
