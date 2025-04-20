@@ -30,5 +30,7 @@ urlpatterns = [
     path('start-video-call/', views.start_video_call, name='start_video_call'),
     path('start-voice-call/', views.start_voice_call, name='start_voice_call'),
     path('update_medical_record/<int:record_id>/', views.update_medical_record, name='update_medical_record'),
-    path('delete-record/<int:record_id>/', views.delete_record, name='delete_record')
+    path('delete-record/<int:record_id>/', views.delete_record, name='delete_record'),
+    path('referral/<int:referral_id>/update/', views.update_referral_status, name='update_referral_status'),
+
 ]

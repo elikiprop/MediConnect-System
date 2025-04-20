@@ -7,6 +7,56 @@
         <h2 style="font-weight: 600; color: #333;">Doctor Dashboard</h2>
     </div>
     
+   <!-- Pending Referrals Section -->
+<div class="table-section" style="margin-bottom: 2rem;">
+    <h3 style="color: #495057; margin-bottom: 1rem;">Pending Referrals</h3>
+    <div class="table-responsive" style="border-radius: 0.5rem; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+        <table class="table table-bordered" style="margin-bottom: 0; width: 100%; border-collapse: collapse;">
+            <thead style="background-color: #f8f9fa;">
+                <tr>
+                    <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Patient</th>
+                    <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Referring Doctor</th>
+                    <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Department</th>
+                    <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Reason</th>
+                    <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Date Referred</th>
+                    <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for referral in pending_referrals %}
+                <tr>
+                    <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ referral.patient.username }}</td>
+                    <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ referral.referring_doctor.user.username }}</td>
+                    <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ referral.department }}</td>
+                    <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ referral.reason }}</td>
+                    <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ referral.created_at|date:"M d, Y" }}</td>
+                    <td class="action-buttons" style="padding: 12px 15px; border: 1px solid #dee2e6;">
+                        <form method="post" action="{% url 'update_referral_status' referral.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="accepted">
+                            <button type="submit" class="btn btn-success btn-sm" style="background-color: #28a745; color: #fff; border: none; padding: 5px 10px; border-radius: 3px; margin-right: 5px;">
+                                Accept
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'update_referral_status' referral.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="rejected">
+                            <button type="submit" class="btn btn-danger btn-sm" style="background-color: #dc3545; color: #fff; border: none; padding: 5px 10px; border-radius: 3px;">
+                                Reject
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center" style="padding: 12px 15px; border: 1px solid #dee2e6;">No pending referrals</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+    
     <!-- Buttons Section -->
     <div class="dashboard-buttons" style="background-color: #f8f9fa; padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 2rem;">
         <h3 style="color: #495057; margin-bottom: 1rem;">Add Medical Record</h3>
@@ -65,7 +115,15 @@
                                     data-medication="{{ record.medication|escapejs }}">
                                 Edit
                             </button>
-                            <a href="{% url 'generate_pdf' record.id %}" class="btn btn-primary btn-sm" style="background-color: #007bff; color: #fff; border: none; padding: 5px 10px; border-radius: 3px;">PDF</a>
+                            <a href="{% url 'generate_pdf' record.id %}" class="btn btn-primary btn-sm" style="background-color: #007bff; color: #fff; border: none; padding: 5px 10px; border-radius: 3px; margin-right: 5px;">PDF</a>
+                            <button type="button" class="btn btn-danger btn-sm delete-record-btn" 
+                                    style="background-color: #dc3545; color: #fff; border: none; padding: 5px 10px; border-radius: 3px;"
+                                    data-toggle="modal" 
+                                    data-target="#deleteRecordModal" 
+                                    data-id="{{ record.id }}" 
+                                    data-patient="{{ record.patient.username|escapejs }}">
+                                Delete
+                            </button>
                         </td>
                     </tr>
                     {% empty %}
@@ -79,7 +137,7 @@
     </div>
 
     <div class="table-section" style="margin-bottom: 2rem;">
-        <h3 style="color: #495057; margin-bottom: 1rem;">Recent Referrals</h3>
+        <h3 style="color: #495057; margin-bottom: 1rem;">All Referrals</h3>
         <div class="table-responsive" style="border-radius: 0.5rem; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
             <table class="table table-bordered" style="margin-bottom: 0; width: 100%; border-collapse: collapse;">
                 <thead style="background-color: #f8f9fa;">
@@ -89,20 +147,26 @@
                         <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Referred Doctor</th>
                         <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Reason</th>
                         <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Status</th>
+                        <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Date</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for referral in referrals %}
-                    <tr>
+                    <tr class="{% if referral.status == 'accepted' %}table-success{% elif referral.status == 'rejected' %}table-danger{% endif %}">
                         <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ referral.patient.username }}</td>
                         <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ referral.referring_doctor.user.username }}</td>
                         <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ referral.referred_doctor.user.username }}</td>
                         <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ referral.reason }}</td>
-                        <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ referral.status }}</td>
+                        <td style="padding: 12px 15px; border: 1px solid #dee2e6;">
+                            <span class="badge {% if referral.status == 'pending' %}bg-warning{% elif referral.status == 'accepted' %}bg-success{% elif referral.status == 'rejected' %}bg-danger{% endif %}">
+                                {{ referral.status|title }}
+                            </span>
+                        </td>
+                        <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ referral.created_at|date:"M d, Y" }}</td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" class="text-center" style="padding: 12px 15px; border: 1px solid #dee2e6;">No referrals found</td>
+                        <td colspan="6" class="text-center" style="padding: 12px 15px; border: 1px solid #dee2e6;">No referrals found</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -191,13 +255,37 @@
     </div>
 </div>
 
-<!-- JavaScript for handling the modal - ensure it loads after jQuery -->
+<!-- Delete Medical Record Modal -->
+<div class="modal fade" id="deleteRecordModal" tabindex="-1" role="dialog" aria-labelledby="deleteRecordModalLabel" aria-hidden="true" style="font-family: Arial, sans-serif;">
+    <div class="modal-dialog" role="document" style="max-width: 500px; margin: 1.75rem auto;">
+        <div class="modal-content" style="border-radius: 0.5rem; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+            <div class="modal-header" style="background-color: #f8f9fa; border-bottom: 1px solid #dee2e6; padding: 1rem 1.5rem;">
+                <h5 class="modal-title" id="deleteRecordModalLabel" style="font-weight: 600; color: #495057;">Delete Medical Record</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="background: none; border: none; font-size: 1.5rem; color: #6c757d; cursor: pointer;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="deleteRecordForm" method="POST">
+                {% csrf_token %}
+                <div class="modal-body" style="padding: 1.5rem;">
+                    <p style="font-size: 1rem; color: #495057;">Are you sure you want to delete the medical record for <span id="deletePatientName" style="font-weight: 600;"></span>?</p>
+                    <p style="font-size: 0.95rem; color: #6c757d; margin-top: 0.5rem;">This action cannot be undone.</p>
+                </div>
+                <div class="modal-footer" style="background-color: #f8f9fa; border-top: 1px solid #dee2e6; padding: 1rem 1.5rem;">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" style="background-color: #6c757d; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; margin-right: 10px;">Cancel</button>
+                    <button type="submit" class="btn btn-danger" style="background-color: #dc3545; color: #fff; border: none; padding: 8px 16px; border-radius: 4px;">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for handling the modals - ensure it loads after jQuery -->
 <script>
 // Wait for the document to be fully loaded
-// Add this to the script section in your template
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof jQuery !== 'undefined') {
-        // Add event listener to the Edit buttons
+        // Edit record functionality
         $('.edit-record-btn').on('click', function() {
             var recordId = $(this).data('id');
             var patient = $(this).data('patient');
@@ -217,7 +305,7 @@ document.addEventListener('DOMContentLoaded', function() {
             $('#editRecordModal').modal('show');
         });
 
-        // Handle form submission with AJAX header
+        // Handle edit form submission with AJAX header
         $('#editRecordForm').on('submit', function(e) {
             e.preventDefault();
             
@@ -244,6 +332,56 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 error: function() {
                     alert('An error occurred while updating the record.');
+                }
+            });
+        });
+        
+        // Delete record functionality
+        $('.delete-record-btn').on('click', function() {
+            var recordId = $(this).data('id');
+            var patient = $(this).data('patient');
+            
+            // Populate the confirmation modal
+            $('#deletePatientName').text(patient);
+            
+            // Set the form action URL
+            $('#deleteRecordForm').attr('action', "{% url 'delete_record' 0 %}".replace('0', recordId));
+            
+            // Display the modal
+            $('#deleteRecordModal').modal('show');
+        });
+
+        // Handle delete form submission with AJAX header
+        $('#deleteRecordForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            $.ajax({
+                url: $(this).attr('action'),
+                type: 'POST',
+                data: $(this).serialize(),
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        // Hide the modal
+                        $('#deleteRecordModal').modal('hide');
+                        
+                        // Show success message
+                        alert(response.message);
+                        
+                        // Reload the page to show the updated data
+                        location.reload();
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function(xhr) {
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        alert('Error: ' + xhr.responseJSON.message);
+                    } else {
+                        alert('An error occurred while deleting the record.');
+                    }
                 }
             });
         });

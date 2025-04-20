@@ -4,7 +4,7 @@ def send_email_notification(recipient, subject, body):
     send_mail(
         subject,
         body,
-        'elikiprop42@gmail.com',  # Update with your email
+        'elindiema0@gmail.com',  # Update with your email
         [recipient],
         fail_silently=False,
     )

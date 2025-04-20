@@ -53,7 +53,10 @@ def contact(request):
     if request.method == "POST":
         form = ContactForm(request.POST)
         if form.is_valid():
-            name, email, subject, message = form.cleaned_data.values()
+            name = form.cleaned_data['name']
+            email = form.cleaned_data['email']
+            subject = form.cleaned_data['subject']
+            message = form.cleaned_data['message']
             send_mail(
                 f"New Contact Form Submission: {subject}",
                 f"Name: {name}\nEmail: {email}\n\nMessage:\n{message}",
@@ -81,21 +84,57 @@ def patient_dashboard(request):
 @login_required(login_url='login')
 def doctor_dashboard(request):
     if request.user.role != 'doctor':
-        messages.error(request, "Only doctors can access this page.")
+        messages.error(request, "Only doctors can access this dashboard.")
         return redirect('home')
-    records = MedicalRecord.objects.filter(doctor__user=request.user)
-    patients = CustomUser.objects.filter(role='patient')
-    referrals = PatientReferral.objects.filter(referring_doctor__user=request.user)
-    appointments = Appointment.objects.filter(doctor__user=request.user)
-    return render(request, "doctor_dashboard.html", {
-        "records": records,
-        "patients": patients,
-        "referrals": referrals,
-        "appointments": appointments
-    })
+        
+    try:
+        doctor = Doctor.objects.get(user=request.user)
+    except Doctor.DoesNotExist:
+        messages.error(request, "Doctor profile not found. Please contact an administrator.")
+        return redirect('home')
+    
+    # Get pending referrals where this doctor is the referred doctor
+    pending_referrals = PatientReferral.objects.filter(
+        referred_doctor=doctor,
+        status='pending'
+    ).order_by('-created_at')
+    
+    # Get all referrals involving this doctor (either as referring or referred)
+    referrals = PatientReferral.objects.filter(
+        referred_doctor=doctor
+    ).order_by('-created_at')
+    
+    # Get recent medical records created by this doctor
+    records = MedicalRecord.objects.filter(
+        doctor=doctor
+    ).order_by('-created_at')[:10]  # Limit to recent 10
+    
+    # Get upcoming appointments for this doctor
+    appointments = Appointment.objects.filter(
+        doctor=doctor,
+        date__gte=datetime.now().date()  # Only future appointments
+    ).order_by('date', 'time')[:10]  # Limit to next 10
+    
+    # Get all patients (for the add medical record dropdown)
+    patients = CustomUser.objects.filter(role='patient').order_by('username')
+    
+    # Build the context with all required variables
+    context = {
+        'pending_referrals': pending_referrals,
+        'referrals': referrals,
+        'records': records,
+        'appointments': appointments,
+        'patients': patients,
+        'doctor': doctor
+    }
+    
+    return render(request, 'doctor_dashboard.html', context)
 
 @login_required(login_url='login')
 def admin_dashboard(request):
+    if request.user.role != 'admin':
+        messages.error(request, "Only admins can access this dashboard.")
+        return redirect('home')
     appointments = Appointment.objects.all().order_by("-date", "-time")
     return render(request, "admin_dashboard.html", {"appointments": appointments})
 
@@ -109,10 +148,10 @@ def add_medical_record(request, patient_id=None, record_id=None):
         doctor = Doctor.objects.get(user=request.user)
     except Doctor.DoesNotExist:
         messages.error(request, "You do not have a doctor profile.")
-        return redirect('doctor_dashboard')
+        return redirect('home')
 
     if record_id:  # Editing
-        record = get_object_or_404(MedicalRecord, id=record_id, doctor__user=request.user)
+        record = get_object_or_404(MedicalRecord, id=record_id, doctor=doctor)
         patient = record.patient
         is_edit = True
     else:  # Adding
@@ -146,46 +185,18 @@ def add_medical_record(request, patient_id=None, record_id=None):
 
     return render(request, 'add_medical_record.html', {'form': form, 'patient': patient, 'is_edit': is_edit})
 
-# Refer a Patient
-@login_required(login_url='login')
-def refer_patient(request):
-    if request.user.role != 'doctor':
-        messages.error(request, "Only doctors can refer patients.")
-        return redirect('home')
-    try:
-        referring_doctor = Doctor.objects.get(user=request.user)
-    except Doctor.DoesNotExist:
-        messages.error(request, "You do not have a doctor profile.")
-        return redirect('doctor_dashboard')
-    if request.method == 'POST':
-        form = PatientReferralForm(request.POST)
-        if form.is_valid():
-            try:
-                referral = form.save(commit=False)
-                referral.referring_doctor = referring_doctor
-                if referral.referred_doctor == referring_doctor:
-                    form.add_error("referred_doctor", "Referring and referred doctors cannot be the same.")
-                    return render(request, "refer_patient.html", {'form': form})
-                referral.save()
-                messages.success(request, "Referral submitted successfully!")
-                return redirect('doctor_dashboard')
-            except Exception as e:
-                messages.error(request, f"Error saving referral: {str(e)}")
-        else:
-            messages.error(request, "Please correct the errors below.")
-    else:
-        form = PatientReferralForm(initial={'referring_doctor': referring_doctor})
-    return render(request, "refer_patient.html", {'form': form})
-
-# Success Page
-def success_page(request):
-    messages.success(request, "Action completed successfully!")
-    return redirect('doctor_dashboard')
-
 # Generate Medical Record PDF
 @login_required(login_url='login')
 def generate_pdf(request, record_id):
     record = get_object_or_404(MedicalRecord, id=record_id)
+    
+    # Check if user has permission to view this record
+    if not (request.user == record.patient or 
+            request.user == record.doctor.user or 
+            request.user.role == 'admin'):
+        messages.error(request, "You don't have permission to access this record.")
+        return redirect('home')
+        
     html = render_to_string("medical_record_pdf.html", {"record": record})
     config = pdfkit.configuration(wkhtmltopdf=r'C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe')
     pdf = pdfkit.from_string(html, False, configuration=config)
@@ -207,6 +218,16 @@ def reschedule_appointment(request, appointment_id):
                 appointment = form.save(commit=False)
                 appointment.clean()
                 appointment.save()
+                
+                # Notify doctor about rescheduled appointment
+                doctor_email = get_doctor_email(appointment.doctor)
+                if doctor_email:
+                    send_email_notification(
+                        doctor_email,
+                        "Appointment Rescheduled",
+                        f"Patient {appointment.patient.get_full_name() or appointment.patient.username} has rescheduled their appointment to {appointment.date} at {appointment.time}."
+                    )
+                
                 messages.success(request, "Appointment rescheduled successfully!")
                 return redirect('view_appointments')
             except forms.ValidationError as e:
@@ -224,8 +245,26 @@ def delete_appointment(request, appointment_id):
         return redirect('home')
     appointment = get_object_or_404(Appointment, id=appointment_id, patient=request.user)
     if request.method == 'POST':
+        # Save doctor email before deleting for notification
+        doctor_email = get_doctor_email(appointment.doctor)
+        
+        # Save info for confirmation message
+        doctor_name = appointment.doctor.user.get_full_name() or appointment.doctor.user.username
+        appointment_date = appointment.date
+        appointment_time = appointment.time
+        
+        # Delete appointment
         appointment.delete()
-        messages.success(request, "Appointment deleted successfully!")
+        
+        # Notify doctor about canceled appointment
+        if doctor_email:
+            send_email_notification(
+                doctor_email,
+                "Appointment Canceled",
+                f"Patient {request.user.get_full_name() or request.user.username} has canceled their appointment scheduled for {appointment_date} at {appointment_time}."
+            )
+        
+        messages.success(request, f"Appointment with Dr. {doctor_name} on {appointment_date} at {appointment_time} has been canceled successfully.")
         return redirect('view_appointments')
     return redirect('view_appointments')
 
@@ -237,33 +276,63 @@ def book_appointment(request):
             try:
                 appointment_date = form.cleaned_data['date']
                 appointment_time = form.cleaned_data['time']
-                unique_id = str(uuid.uuid4())
+                selected_doctor = form.cleaned_data['doctor']
+                
+                # Check if patient already has an appointment with this doctor on the same day/time
+                if request.user.is_authenticated and request.user.role == 'patient':
+                    existing_appointment = Appointment.objects.filter(
+                        patient=request.user,
+                        doctor=selected_doctor,
+                        date=appointment_date,
+                        time=appointment_time
+                    ).exists()
+                    
+                    if existing_appointment:
+                        messages.error(request, "You already have an appointment with this doctor at this time.")
+                        return render(request, "appointment.html", {"form": form})
+                
+                # Use the default Google Meet link instead of generating a unique one
+                default_meet_link = "https://meet.google.com/bdu-vfen-nwx"
+                
                 appointment = Appointment(
                     name=form.cleaned_data['name'],
                     email=form.cleaned_data['email'],
                     phone=form.cleaned_data['phone'],
                     department=form.cleaned_data['department'],
-                    doctor=form.cleaned_data['doctor'],
+                    doctor=selected_doctor,
                     date=appointment_date,
                     time=appointment_time,
                     patient=request.user if request.user.is_authenticated and request.user.role == 'patient' else None,
-                    voice_call_link=f"https://example.com/voice-call/{unique_id}",
-                    video_call_link=f"https://example.com/video-call/{unique_id}"
+                    voice_call_link=default_meet_link,
+                    video_call_link=default_meet_link
                 )
                 appointment.clean()
                 appointment.save()
-                send_email_notification(
-                    form.cleaned_data['email'],
-                    "Appointment Confirmation",
-                    f"Your appointment with Dr. {appointment.doctor.user.username} is confirmed."
-                )
-                send_email_notification(
-                    get_doctor_email(appointment.doctor),
-                    "New Appointment",
-                    f"New appointment scheduled with {form.cleaned_data['name']}."
-                )
+                
+                # Notify patient and doctor with error handling
+                try:
+                    send_mail(
+                        "Appointment Confirmation",
+                        f"Your appointment with Dr. {selected_doctor.user.get_full_name() or selected_doctor.user.username} is confirmed for {appointment_date} at {appointment_time}. Video link: {default_meet_link}",
+                        settings.DEFAULT_FROM_EMAIL,
+                        [form.cleaned_data['email']],
+                        fail_silently=True
+                    )
+                    
+                    doctor_email = selected_doctor.user.email
+                    if doctor_email:
+                        send_mail(
+                            "New Appointment",
+                            f"New appointment scheduled with {form.cleaned_data['name']} for {appointment_date} at {appointment_time}. Video link: {default_meet_link}",
+                            settings.DEFAULT_FROM_EMAIL,
+                            [doctor_email],
+                            fail_silently=True
+                        )
+                except Exception as e:
+                    print(f"Email sending error: {str(e)}")
+                
                 messages.success(request, "Appointment booked successfully!")
-                return redirect('view_appointments')
+                return redirect('view_appointments' if request.user.is_authenticated and request.user.role == 'patient' else 'home')
             except forms.ValidationError as e:
                 messages.error(request, str(e))
         else:
@@ -277,16 +346,26 @@ def view_appointments(request):
     if request.user.role != 'patient':
         messages.error(request, "Only patients can view appointments.")
         return redirect('home')
-    appointments = Appointment.objects.filter(patient=request.user)
+    appointments = Appointment.objects.filter(patient=request.user).order_by('date', 'time')
     return render(request, "view_appointments.html", {"appointments": appointments})
 
 # Call Notifications
 @login_required(login_url='login')
 def notify_doctor(request, appointment_id, call_type):
     appointment = get_object_or_404(Appointment, id=appointment_id)
+    
+    # Security check: only the patient or admin should be able to initiate calls
+    if not (request.user == appointment.patient or request.user.role == 'admin'):
+        messages.error(request, "You don't have permission to initiate this call.")
+        return redirect('home')
+    
     subject = f"Patient {appointment.name or appointment.patient.username} {'Joined Video Call' if call_type == 'video' else 'is Calling'}"
     body = f"Meet Link: {appointment.video_call_link}" if call_type == 'video' else f"Phone: {appointment.phone}"
-    send_email_notification(get_doctor_email(appointment.doctor), subject, body)
+    
+    doctor_email = get_doctor_email(appointment.doctor)
+    if doctor_email:
+        send_email_notification(doctor_email, subject, body)
+    
     redirect_url = appointment.video_call_link if call_type == 'video' else f"tel:{appointment.phone}"
     return redirect(redirect_url)
 
@@ -324,60 +403,10 @@ def user_login(request):
 
 def user_logout(request):
     logout(request)
+    messages.info(request, "You have been logged out successfully.")
     return redirect("login")
 
-# Placeholder Views (Comment out unless needed)
-"""
-@login_required(login_url='login')
-def diagnose_patient(request, appointment_id):
-    if request.user.role != 'doctor':
-        messages.error(request, "Only doctors can diagnose patients.")
-        return redirect('home')
-    appointment = get_object_or_404(Appointment, id=appointment_id, doctor__user=request.user)
-    if request.method == 'POST':
-        try:
-            diagnosis = request.POST.get('diagnosis')
-            medication = request.POST.get('medication')
-            recommendations = request.POST.get('recommendations')
-            if not diagnosis or not medication:
-                messages.error(request, "Diagnosis and medication are required.")
-                return render(request, "diagnose_patient.html", {'appointment': appointment})
-            MedicalRecord.objects.create(
-                patient=appointment.patient,
-                doctor=appointment.doctor,
-                diagnosis=diagnosis,
-                medication=medication
-            )
-            messages.success(request, "Diagnosis saved successfully!")
-            return redirect('doctor_dashboard')
-        except Exception as e:
-            messages.error(request, f"Error saving diagnosis: {str(e)}")
-    return render(request, "diagnose_patient.html", {'appointment': appointment})
-
-@login_required(login_url='login')
-def medical_records(request):
-    if request.user.role != 'doctor':
-        messages.error(request, "Only doctors can view medical records.")
-        return redirect('home')
-    records = MedicalRecord.objects.filter(doctor__user=request.user).order_by('-created_at')
-    return render(request, "medical_records.html", {'records': records})
-
-@login_required(login_url='login')
-def view_patient_records(request):
-    if request.user.role != 'doctor':
-        messages.error(request, "Only doctors can view patient records.")
-        return redirect('home')
-    records = MedicalRecord.objects.filter(doctor__user=request.user).order_by('-created_at')
-    patient_records = [{
-        'id': record.id,
-        'patient_name': record.patient.get_full_name() or record.patient.username,
-        'doctor_name': record.doctor.user.get_full_name() or record.doctor.user.username,
-        'diagnosis': record.diagnosis,
-        'medication': record.medication
-    } for record in records]
-    return render(request, "view_patient_records.html", {'patient_records': patient_records})
-"""
-
+# Voice and Video Call Views
 def start_video_call(request):
     return render(request, 'start_video_call.html')
 
@@ -386,27 +415,44 @@ def start_voice_call(request):
 
 def notify_doctor_video_call(request, appointment_id):
     appointment = get_object_or_404(Appointment, id=appointment_id)
-    send_email_notification(
-        get_doctor_email(appointment.doctor),
-        f"Patient {appointment.name} Joined Video Call",
-        f"Meet Link: {appointment.video_call_link}"
-    )
+    
+    # Security check: only the patient or admin should be able to initiate calls
+    if not (request.user == appointment.patient or request.user.role == 'admin'):
+        messages.error(request, "You don't have permission to initiate this call.")
+        return redirect('home')
+    
+    doctor_email = get_doctor_email(appointment.doctor)
+    if doctor_email:
+        send_email_notification(
+            doctor_email,
+            f"Patient {appointment.name or appointment.patient.username} Joined Video Call",
+            f"Meet Link: {appointment.video_call_link}"
+        )
+    
     return redirect(appointment.video_call_link)
 
 def notify_doctor_voice_call(request, appointment_id):
     appointment = get_object_or_404(Appointment, id=appointment_id)
-    send_email_notification(
-        get_doctor_email(appointment.doctor),
-        f"Patient {appointment.name} is Calling",
-        f"Phone: {appointment.phone}"
-    )
+    
+    # Security check: only the patient or admin should be able to initiate calls
+    if not (request.user == appointment.patient or request.user.role == 'admin'):
+        messages.error(request, "You don't have permission to initiate this call.")
+        return redirect('home')
+    
+    doctor_email = get_doctor_email(appointment.doctor)
+    if doctor_email:
+        send_email_notification(
+            doctor_email,
+            f"Patient {appointment.name or appointment.patient.username} is Calling",
+            f"Phone: {appointment.phone}"
+        )
+    
     return redirect(f"tel:{appointment.phone}")
 
-# Add this new function to your views.py file
-
+# Update Medical Record
 def update_medical_record(request, record_id):
     if request.user.role != 'doctor':
-        # Check if AJAX request using the proper method for newer Django versions
+        # Check if AJAX request
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'status': 'error', 'message': 'Only doctors can edit medical records.'})
         messages.error(request, "Only doctors can edit medical records.")
@@ -418,11 +464,11 @@ def update_medical_record(request, record_id):
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'status': 'error', 'message': 'You do not have a doctor profile.'})
         messages.error(request, "You do not have a doctor profile.")
-        return redirect('doctor_dashboard')
+        return redirect('home')
     
     # Get the record and check permissions
     record = get_object_or_404(MedicalRecord, id=record_id)
-    if record.doctor.user != request.user:
+    if record.doctor != doctor:
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return JsonResponse({'status': 'error', 'message': 'You can only edit your own medical records.'})
         messages.error(request, "You can only edit your own medical records.")
@@ -440,7 +486,7 @@ def update_medical_record(request, record_id):
         record.save()
         
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return JsonResponse({'status': 'success'})
+            return JsonResponse({'status': 'success', 'message': 'Medical record updated successfully!'})
         
         messages.success(request, "Medical record updated successfully!")
         return redirect('doctor_dashboard')
@@ -448,11 +494,7 @@ def update_medical_record(request, record_id):
     # If it's not a POST request, redirect to dashboard
     return redirect('doctor_dashboard')
 
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from .models import MedicalRecord
-
+# Delete Medical Record
 @login_required
 def delete_record(request, record_id):
     """
@@ -466,10 +508,10 @@ def delete_record(request, record_id):
         # Authorization check - only allow if user is the patient, the doctor, or has admin rights
         if (request.user == record.patient or 
             request.user == record.doctor.user or 
-            request.user.is_staff):
+            request.user.role == 'admin'):
             
             # Save info for confirmation message
-            patient_name = record.patient.username
+            patient_name = record.patient.get_full_name() or record.patient.username
             date = record.created_at.date()
             
             # Delete the record
@@ -507,4 +549,123 @@ def delete_record(request, record_id):
         }, status=400)  # Return 400 Bad Request status
     
     # Redirect back to the medical records page for non-AJAX requests
-    return redirect('doctor_dashboard')  # Replace with your actual URL name
+    if request.user.role == 'doctor':
+        return redirect('doctor_dashboard')
+    elif request.user.role == 'patient':
+        return redirect('patient_dashboard')
+    else:
+        return redirect('home')
+
+# Patient Referral
+@login_required
+def refer_patient(request):
+    if request.user.role != 'doctor':
+        messages.error(request, "Only doctors can refer patients.")
+        return redirect('home')
+    
+    # Get the doctor profile associated with the current user
+    try:
+        referring_doctor = Doctor.objects.get(user=request.user)
+    except Doctor.DoesNotExist:
+        messages.error(request, "You don't have a doctor profile.")
+        return redirect('home')
+    
+    if request.method == 'POST':
+        # Create a modified POST data that includes referring_doctor
+        post_data = request.POST.copy()  # Make a mutable copy
+        post_data['referring_doctor'] = referring_doctor.id  # Set referring_doctor ID explicitly
+        
+        form = PatientReferralForm(post_data)
+        if form.is_valid():
+            try:
+                # Create but don't save the instance yet
+                referral = form.save(commit=False)
+                # Double-check that referring_doctor is set
+                referral.referring_doctor = referring_doctor
+                
+                # Set initial status
+                referral.status = 'pending'
+                
+                # Now save the referral
+                referral.save()
+                
+                # Notify referred doctor about the referral
+                referred_doctor = referral.referred_doctor
+                if referred_doctor and hasattr(referred_doctor, 'user') and referred_doctor.user.email:
+                    send_email_notification(
+                        referred_doctor.user.email,
+                        "New Patient Referral",
+                        f"You have received a patient referral from Dr. {referring_doctor.user.get_full_name() or referring_doctor.user.username}."
+                    )
+                
+                messages.success(request, "Patient referred successfully!")
+                return redirect('doctor_dashboard')
+            except Exception as e:
+                messages.error(request, f"Error referring patient: {str(e)}")
+        else:
+            messages.error(request, "Please correct the errors below.")
+            # For debugging
+            print(f"Form errors: {form.errors}")
+    else:
+        form = PatientReferralForm(initial={'referring_doctor': referring_doctor.id})
+    
+    # Get all patients and doctors for dropdowns
+    patients = CustomUser.objects.filter(role='patient')
+    doctors = Doctor.objects.exclude(user=request.user)  # Exclude current doctor
+    
+    return render(request, 'refer_patient.html', {
+        'form': form,
+        'patients': patients,
+        'doctors': doctors
+    })
+
+# Update Referral Status
+@login_required
+def update_referral_status(request, referral_id):
+    if request.user.role != 'doctor':
+        messages.error(request, "Only doctors can update referral statuses.")
+        return redirect('home')
+    
+    try:
+        doctor = Doctor.objects.get(user=request.user)
+    except Doctor.DoesNotExist:
+        messages.error(request, "You don't have a doctor profile.")
+        return redirect('home')
+    
+    if request.method == 'POST':
+        referral_obj = get_object_or_404(PatientReferral, id=referral_id)
+        new_status = request.POST.get('status')
+        
+        # Validate status value
+        if new_status not in ['pending', 'accepted', 'rejected']:
+            messages.error(request, "Invalid status value.")
+            return redirect('doctor_dashboard')
+        
+        # Check if doctor is the referred doctor
+        if referral_obj.referred_doctor != doctor:
+            messages.error(request, "You can only update referrals that were sent to you.")
+            return redirect('doctor_dashboard')
+        
+        # Update the status
+        old_status = referral_obj.status
+        referral_obj.status = new_status
+        referral_obj.save()
+        
+        # Notify referring doctor about status change - with error handling
+        referring_doctor = referral_obj.referring_doctor
+        if referring_doctor and hasattr(referring_doctor, 'user') and referring_doctor.user.email:
+            try:
+                send_mail(
+                    f"PatientReferral Status Updated to {new_status.capitalize()}",
+                    f"A referral you made has been {new_status} by Dr. {doctor.user.get_full_name() or doctor.user.username}.",
+                    settings.DEFAULT_FROM_EMAIL,
+                    [referring_doctor.user.email],
+                    fail_silently=True  # This prevents SMTP errors from breaking the flow
+                )
+            except Exception as e:
+                # Log the error but continue execution
+                print(f"Email sending error: {str(e)}")
+        
+        messages.success(request, f"Referral status updated from {old_status} to {new_status}.")
+    
+    return redirect('doctor_dashboard')

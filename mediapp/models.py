@@ -137,6 +137,7 @@ class PatientReferral(models.Model):
         ('accepted', 'Accepted'),
         ('rejected', 'Rejected'),
     ]
+
     patient = models.ForeignKey(
         get_user_model(),
         on_delete=models.CASCADE,
@@ -162,8 +163,10 @@ class PatientReferral(models.Model):
     department = models.CharField(max_length=255, blank=True, null=True)
 
     def clean(self):
+        # Ensures patient has the correct role
         if self.patient.role != 'patient':
             raise ValidationError("Patient must have role 'patient'.")
+        # Prevents referring and referred doctors from being the same
         if self.referring_doctor == self.referred_doctor:
             raise ValidationError("Referring and referred doctors cannot be the same.")
 
