@@ -32,5 +32,11 @@ urlpatterns = [
     path('update_medical_record/<int:record_id>/', views.update_medical_record, name='update_medical_record'),
     path('delete-record/<int:record_id>/', views.delete_record, name='delete_record'),
     path('referral/<int:referral_id>/update/', views.update_referral_status, name='update_referral_status'),
+    
+    
+    
+    path('referrals/outgoing/', views.view_outgoing_referrals, name='view_outgoing_referrals'),
+    path('referrals/incoming/', views.view_incoming_referrals, name='view_incoming_referrals'),
+    path('referrals/treat/<int:referral_id>/', views.treat_referred_patient, name='treat_referred_patient'),
 
 ]

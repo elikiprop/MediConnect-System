@@ -1,0 +1,56 @@
+{% if referrals %}
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead class="thead-light">
+            <tr>
+                <th>Patient</th>
+                <th>From Doctor</th>
+                <th>Reason</th>
+                <th>Date</th>
+                <th>Status</th>
+                {% if show_actions %}<th>Actions</th>{% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for referral in referrals %}
+            <tr class="{% if referral.status == 'pending' %}table-warning{% elif referral.status == 'accepted' %}table-success{% elif referral.status == 'rejected' %}table-danger{% endif %}">
+                <td>{{ referral.patient.username }}</td>
+                <td>{{ referral.referring_doctor.user.username }}</td>
+                <td>{{ referral.reason|truncatechars:50 }}</td>
+                <td>{{ referral.created_at|date:"M d, Y" }}</td>
+                <td>
+                    <span class="badge {% if referral.status == 'pending' %}badge-warning{% elif referral.status == 'accepted' %}badge-success{% elif referral.status == 'rejected' %}badge-danger{% endif %}">
+                        {{ referral.status|title }}
+                    </span>
+                </td>
+                {% if show_actions %}
+                <td>
+                    <form method="post" action="{% url 'update_referral_status' referral.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="accepted">
+                        <button type="submit" class="btn btn-success btn-sm" aria-label="Accept Referral">
+                            <i class="fas fa-check fa-sm"></i> Accept
+                        </button>
+                    </form>
+                    <form method="post" action="{% url 'update_referral_status' referral.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="status" value="rejected">
+                        <button type="submit" class="btn btn-danger btn-sm" aria-label="Reject Referral">
+                            <i class="fas fa-times fa-sm"></i> Reject
+                        </button>
+                    </form>
+                    {% if referral.status == 'accepted' %}
+                    <a href="{% url 'treat_referred_patient' referral.id %}" class="btn btn-primary btn-sm" aria-label="Treat Referred Patient">
+                        <i class="fas fa-user-md fa-sm"></i> Treat
+                    </a>
+                    {% endif %}
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<p class="text-center py-3">No referrals found.</p>
+{% endif %}

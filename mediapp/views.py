@@ -82,55 +82,6 @@ def patient_dashboard(request):
     })
 
 @login_required(login_url='login')
-def doctor_dashboard(request):
-    if request.user.role != 'doctor':
-        messages.error(request, "Only doctors can access this dashboard.")
-        return redirect('home')
-        
-    try:
-        doctor = Doctor.objects.get(user=request.user)
-    except Doctor.DoesNotExist:
-        messages.error(request, "Doctor profile not found. Please contact an administrator.")
-        return redirect('home')
-    
-    # Get pending referrals where this doctor is the referred doctor
-    pending_referrals = PatientReferral.objects.filter(
-        referred_doctor=doctor,
-        status='pending'
-    ).order_by('-created_at')
-    
-    # Get all referrals involving this doctor (either as referring or referred)
-    referrals = PatientReferral.objects.filter(
-        referred_doctor=doctor
-    ).order_by('-created_at')
-    
-    # Get recent medical records created by this doctor
-    records = MedicalRecord.objects.filter(
-        doctor=doctor
-    ).order_by('-created_at')[:10]  # Limit to recent 10
-    
-    # Get upcoming appointments for this doctor
-    appointments = Appointment.objects.filter(
-        doctor=doctor,
-        date__gte=datetime.now().date()  # Only future appointments
-    ).order_by('date', 'time')[:10]  # Limit to next 10
-    
-    # Get all patients (for the add medical record dropdown)
-    patients = CustomUser.objects.filter(role='patient').order_by('username')
-    
-    # Build the context with all required variables
-    context = {
-        'pending_referrals': pending_referrals,
-        'referrals': referrals,
-        'records': records,
-        'appointments': appointments,
-        'patients': patients,
-        'doctor': doctor
-    }
-    
-    return render(request, 'doctor_dashboard.html', context)
-
-@login_required(login_url='login')
 def admin_dashboard(request):
     if request.user.role != 'admin':
         messages.error(request, "Only admins can access this dashboard.")
@@ -669,3 +620,201 @@ def update_referral_status(request, referral_id):
         messages.success(request, f"Referral status updated from {old_status} to {new_status}.")
     
     return redirect('doctor_dashboard')
+
+
+
+
+
+
+# First, let's add a new view for listing all referrals made by a doctor
+@login_required(login_url='login')
+def view_outgoing_referrals(request):
+    if request.user.role != 'doctor':
+        messages.error(request, "Only doctors can view outgoing referrals.")
+        return redirect('home')
+    
+    try:
+        doctor = Doctor.objects.get(user=request.user)
+    except Doctor.DoesNotExist:
+        messages.error(request, "Doctor profile not found.")
+        return redirect('home')
+    
+    # Get all referrals made by this doctor
+    outgoing_referrals = PatientReferral.objects.filter(
+        referring_doctor=doctor
+    ).order_by('-created_at')
+    
+    return render(request, 'view_outgoing_referrals.html', {
+        'referrals': outgoing_referrals
+    })
+
+# Now, let's add a view for the referred doctor to see accepted referrals and take action
+@login_required(login_url='login')
+def view_incoming_referrals(request):
+    if request.user.role != 'doctor':
+        messages.error(request, "Only doctors can view incoming referrals.")
+        return redirect('home')
+    
+    try:
+        doctor = Doctor.objects.get(user=request.user)
+    except Doctor.DoesNotExist:
+        messages.error(request, "Doctor profile not found.")
+        return redirect('home')
+    
+    # Get all referrals where this doctor is the referred doctor
+    incoming_referrals = PatientReferral.objects.filter(
+        referred_doctor=doctor
+    ).order_by('-created_at')
+    
+    # Split by status for better UI organization
+    pending_referrals = incoming_referrals.filter(status='pending')
+    accepted_referrals = incoming_referrals.filter(status='accepted')
+    rejected_referrals = incoming_referrals.filter(status='rejected')
+    
+    return render(request, 'view_incoming_referrals.html', {
+        'pending_referrals': pending_referrals,
+        'accepted_referrals': accepted_referrals,
+        'rejected_referrals': rejected_referrals
+    })
+
+# Add a view to create a medical record for a referred patient
+@login_required(login_url='login')
+def treat_referred_patient(request, referral_id):
+    if request.user.role != 'doctor':
+        messages.error(request, "Only doctors can treat referred patients.")
+        return redirect('home')
+    
+    try:
+        doctor = Doctor.objects.get(user=request.user)
+    except Doctor.DoesNotExist:
+        messages.error(request, "Doctor profile not found.")
+        return redirect('home')
+    
+    # Get the referral and check if this doctor is the referred doctor
+    referral = get_object_or_404(PatientReferral, id=referral_id)
+    
+    if referral.referred_doctor != doctor:
+        messages.error(request, "You can only treat patients referred to you.")
+        return redirect('doctor_dashboard')
+    
+    if referral.status != 'accepted':
+        messages.error(request, "You must accept the referral before treating the patient.")
+        return redirect('view_incoming_referrals')
+    
+    # Now we can treat the patient - create a medical record form
+    if request.method == 'POST':
+        form = MedicalRecordForm(request.POST)
+        if form.is_valid():
+            medical_record = form.save(commit=False)
+            medical_record.patient = referral.patient
+            medical_record.doctor = doctor
+            medical_record.referral = referral  # Link the medical record to the referral
+            medical_record.save()
+            
+            # Optionally notify the referring doctor
+            referring_doctor_email = get_doctor_email(referral.referring_doctor)
+            if referring_doctor_email:
+                send_email_notification(
+                    referring_doctor_email,
+                    "Referred Patient Treatment Update",
+                    f"Dr. {doctor.user.get_full_name() or doctor.user.username} has treated your referred patient {referral.patient.get_full_name() or referral.patient.username}."
+                )
+            
+            messages.success(request, "Medical record created for referred patient!")
+            return redirect('view_incoming_referrals')
+    else:
+        form = MedicalRecordForm(initial={
+            'patient': referral.patient,
+            'doctor': doctor
+        })
+    
+    return render(request, 'treat_referred_patient.html', {
+        'form': form,
+        'referral': referral
+    })
+
+
+# Modify the doctor_dashboard view to include outgoing referrals
+@login_required(login_url='login')
+def doctor_dashboard(request):
+    if request.user.role != 'doctor':
+        messages.error(request, "Only doctors can access this dashboard.")
+        return redirect('home')
+        
+    try:
+        doctor = Doctor.objects.get(user=request.user)
+    except Doctor.DoesNotExist:
+        messages.error(request, "Doctor profile not found. Please contact an administrator.")
+        return redirect('home')
+    
+    # Get all relevant data for the doctor
+    
+    # 1. Get medical records created by this doctor
+    records = MedicalRecord.objects.filter(doctor=doctor).order_by('-created_at')
+    
+    # 2. Get upcoming appointments for this doctor
+    upcoming_appointments = Appointment.objects.filter(
+        doctor=doctor,
+        date__gte=datetime.now().date()  # Only future appointments
+    ).order_by('date', 'time')
+    
+    # 3. Get past appointments for this doctor
+    past_appointments = Appointment.objects.filter(
+        doctor=doctor,
+        date__lt=datetime.now().date()  # Only past appointments
+    ).order_by('-date', '-time')[:10]  # Limit to last 10
+    
+    # 4. Get pending referrals where this doctor is the referred doctor
+    pending_referrals = PatientReferral.objects.filter(
+        referred_doctor=doctor,
+        status='pending'
+    ).order_by('-created_at')
+    
+    # 5. Get all incoming referrals involving this doctor as the referred doctor
+    incoming_referrals = PatientReferral.objects.filter(
+        referred_doctor=doctor
+    ).exclude(status='pending').order_by('-created_at')
+    
+    # 6. Get all outgoing referrals made by this doctor
+    outgoing_referrals = PatientReferral.objects.filter(
+        referring_doctor=doctor
+    ).order_by('-created_at')
+    
+    # 7. Get all patients (for the add medical record dropdown)
+    patients = CustomUser.objects.filter(role='patient').order_by('username')
+    
+    # Handle AJAX form submissions for adding medical records
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        if 'patient_id' in request.POST and 'diagnosis' in request.POST and 'medication' in request.POST:
+            try:
+                patient = CustomUser.objects.get(id=request.POST.get('patient_id'), role='patient')
+                record = MedicalRecord(
+                    patient=patient,
+                    doctor=doctor,
+                    diagnosis=request.POST.get('diagnosis'),
+                    medication=request.POST.get('medication')
+                )
+                record.save()
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'Medical record added successfully!',
+                    'record_id': record.id,
+                    'patient_name': patient.username,
+                    'date': record.created_at.strftime('%b %d, %Y')
+                })
+            except Exception as e:
+                return JsonResponse({'status': 'error', 'message': str(e)})
+    
+    # Build the context with all required variables
+    context = {
+        'doctor': doctor,
+        'records': records,
+        'upcoming_appointments': upcoming_appointments,
+        'past_appointments': past_appointments,
+        'pending_referrals': pending_referrals,
+        'incoming_referrals': incoming_referrals,
+        'outgoing_referrals': outgoing_referrals,
+        'patients': patients,
+    }
+    
+    return render(request, 'doctor_dashboard.html', context)

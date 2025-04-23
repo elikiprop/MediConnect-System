@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}Treat Referred Patient{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Treat Referred Patient</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-4">
+                            <h5>Patient Information</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Name:</strong> {{ referral.patient.get_full_name|default:referral.patient.username }}</p>
+                                    <p><strong>Referred By:</strong> Dr. {{ referral.referring_doctor.user.get_full_name|default:referral.referring_doctor.user.username }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Referral Date:</strong> {{ referral.created_at|date:"M d, Y" }}</p>
+                                    <p><strong>Reason for Referral:</strong> {{ referral.reason }}</p>
+                                </div>
+                            </div>
+                            
+                            {% if referral.notes %}
+                            <div class="card bg-light mb-4">
+                                <div class="card-body">
+                                    <h6>Notes from Referring Doctor:</h6>
+                                    <p>{{ referral.notes }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <h5>Create Medical Record</h5>
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="{{ form.diagnosis.id_for_label }}">Diagnosis:</label>
+                                {{ form.diagnosis }}
+                                {% if form.diagnosis.errors %}
+                                <div class="text-danger">
+                                    {{ form.diagnosis.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="{{ form.medication.id_for_label }}">Medication/Treatment Plan:</label>
+                                {{ form.medication }}
+                                {% if form.medication.errors %}
+                                <div class="text-danger">
+                                    {{ form.medication.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-primary">Save Medical Record</button>
+                                <a href="{% url 'view_incoming_referrals' %}" class="btn btn-secondary">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
