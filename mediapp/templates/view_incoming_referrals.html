@@ -1,191 +1,216 @@
+{# view_incoming_referrals.html #}
 {% extends 'base.html' %}
 {% block title %}My Incoming Referrals{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-5">
     <div class="container">
-        <div class="row">
-            <div class="col-12">
-                <h2 class="mb-4">My Incoming Referrals</h2>
-                
-                <!-- Pending Referrals -->
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                        <h6 class="m-0 font-weight-bold text-primary">Pending Referrals</h6>
-                    </div>
-                    <div class="card-body">
-                        {% if pending_referrals %}
-                        <div class="table-responsive">
-                            <table class="table table-bordered" width="100%" cellspacing="0">
-                                <thead>
-                                    <tr>
-                                        <th>Patient</th>
-                                        <th>Referred By</th>
-                                        <th>Reason</th>
-                                        <th>Date</th>
-                                        <th>Notes</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for referral in pending_referrals %}
-                                    <tr>
-                                        <td>{{ referral.patient.get_full_name|default:referral.patient.username }}</td>
-                                        <td>Dr. {{ referral.referring_doctor.user.get_full_name|default:referral.referring_doctor.user.username }}</td>
-                                        <td>{{ referral.reason }}</td>
-                                        <td>{{ referral.created_at|date:"M d, Y" }}</td>
-                                        <td>{{ referral.notes|truncatechars:100 }}</td>
-                                        <td>
-                                            <form method="post" action="{% url 'update_referral_status' referral.id %}" class="d-inline">
-                                                {% csrf_token %}
-                                                <input type="hidden" name="status" value="accepted">
-                                                <button type="submit" class="btn btn-success btn-sm">Accept</button>
-                                            </form>
-                                            <form method="post" action="{% url 'update_referral_status' referral.id %}" class="d-inline">
-                                                {% csrf_token %}
-                                                <input type="hidden" name="status" value="rejected">
-                                                <button type="submit" class="btn btn-danger btn-sm">Reject</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                        {% else %}
-                        <div class="text-center py-4">
-                            <p class="text-muted">No pending referrals.</p>
-                        </div>
-                        {% endif %}
-                    </div>
+        <div class="row mb-3">
+            <div class="col-6">
+                <h2 class="mb-0">My Incoming Referrals</h2>
+            </div>
+            <div class="col-6 text-end">
+                <a href="{% url 'doctor_dashboard' %}" class="btn btn-outline-secondary">
+                    ← Back to Dashboard
+                </a>
+            </div>
+        </div>
+        
+        <!-- Pending Referrals Section -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-warning">Pending Referrals</h6>
+            </div>
+            <div class="card-body">
+                {% if pending_referrals %}
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Patient</th>
+                                <th>Referring Doctor</th>
+                                <th>Reason</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for referral in pending_referrals %}
+                            <tr>
+                                <td>{{ referral.patient.get_full_name|default:referral.patient.username }}</td>
+                                <td>Dr. {{ referral.referring_doctor.user.get_full_name|default:referral.referring_doctor.user.username }}</td>
+                                <td>{{ referral.reason }}</td>
+                                <td>{{ referral.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <form method="post" action="{% url 'update_referral_status' referral.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="status" value="accepted">
+                                        <button type="submit" class="btn btn-success btn-sm">Accept</button>
+                                    </form>
+                                    <form method="post" action="{% url 'update_referral_status' referral.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="status" value="rejected">
+                                        <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-                
-                <!-- Accepted Referrals -->
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-success">Accepted Referrals</h6>
-                    </div>
-                    <div class="card-body">
-                        {% if accepted_referrals %}
-                        <div class="table-responsive">
-                            <table class="table table-bordered" width="100%" cellspacing="0">
-                                <thead>
-                                    <tr>
-                                        <th>Patient</th>
-                                        <th>Referred By</th>
-                                        <th>Reason</th>
-                                        <th>Date</th>
-                                        <th>Treatment Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for referral in accepted_referrals %}
-                                    <tr>
-                                        <td>{{ referral.patient.get_full_name|default:referral.patient.username }}</td>
-                                        <td>Dr. {{ referral.referring_doctor.user.get_full_name|default:referral.referring_doctor.user.username }}</td>
-                                        <td>{{ referral.reason }}</td>
-                                        <td>{{ referral.created_at|date:"M d, Y" }}</td>
-                                        <td>
-                                            {% if referral.medical_records.all %}
-                                                <span class="badge badge-success">Treated</span>
-                                            {% else %}
-                                                <span class="badge badge-warning">Not Treated Yet</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if referral.medical_records.all %}
-                                                <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#treatmentModal{{ referral.id }}">
-                                                    View Treatment
-                                                </button>
-                                                
-                                                <!-- Modal for Treatment Details -->
-                                                <div class="modal fade" id="treatmentModal{{ referral.id }}" tabindex="-1" role="dialog" aria-labelledby="treatmentModalLabel{{ referral.id }}" aria-hidden="true">
-                                                    <div class="modal-dialog modal-lg" role="document">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <h5 class="modal-title" id="treatmentModalLabel{{ referral.id }}">Treatment Records for {{ referral.patient.get_full_name|default:referral.patient.username }}</h5>
-                                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                                    <span aria-hidden="true">&times;</span>
-                                                                </button>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                {% for record in referral.medical_records.all %}
-                                                                <div class="card mb-3">
-                                                                    <div class="card-header">
-                                                                        <h6>Treatment on {{ record.created_at|date:"M d, Y" }}</h6>
-                                                                    </div>
-                                                                    <div class="card-body">
-                                                                        <h6>Diagnosis:</h6>
-                                                                        <p>{{ record.diagnosis }}</p>
-                                                                        <h6>Medication/Treatment:</h6>
-                                                                        <p>{{ record.medication }}</p>
-                                                                    </div>
-                                                                </div>
-                                                                {% endfor %}
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                                                <a href="{% url 'treat_referred_patient' referral.id %}" class="btn btn-primary">Add Treatment</a>
-                                                            </div>
+                {% else %}
+                <p class="text-center text-muted">No pending referrals.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Accepted Referrals Section -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-success">Accepted Referrals (Pending Treatment)</h6>
+            </div>
+            <div class="card-body">
+                {% if accepted_referrals %}
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Patient</th>
+                                <th>Referring Doctor</th>
+                                <th>Reason</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for referral in accepted_referrals %}
+                            <tr>
+                                <td>{{ referral.patient.get_full_name|default:referral.patient.username }}</td>
+                                <td>Dr. {{ referral.referring_doctor.user.get_full_name|default:referral.referring_doctor.user.username }}</td>
+                                <td>{{ referral.reason }}</td>
+                                <td>{{ referral.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <a href="{% url 'treat_referred_patient' referral.id %}" class="btn btn-primary btn-sm">
+                                        Treat Patient
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center text-muted">No pending untreated referrals.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Treated Referrals Section -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-info">Completed Referrals (Treated)</h6>
+            </div>
+            <div class="card-body">
+                {% if treated_referrals %}
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Patient</th>
+                                <th>Referring Doctor</th>
+                                <th>Reason</th>
+                                <th>Date Treated</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for referral in treated_referrals %}
+                            <tr>
+                                <td>{{ referral.patient.get_full_name|default:referral.patient.username }}</td>
+                                <td>Dr. {{ referral.referring_doctor.user.get_full_name|default:referral.referring_doctor.user.username }}</td>
+                                <td>{{ referral.reason }}</td>
+                                <td>{{ referral.medical_records.first.created_at|date:"M d, Y" }}</td>
+                                <td>
+                                    <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#treatmentModal{{ referral.id }}">
+                                        View Treatment Details
+                                    </button>
+                                   
+                                    
+                                    <!-- Modal for Treatment Details -->
+                                    <div class="modal fade" id="treatmentModal{{ referral.id }}" tabindex="-1" role="dialog" aria-labelledby="treatmentModalLabel{{ referral.id }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-lg" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="treatmentModalLabel{{ referral.id }}">Treatment Details for {{ referral.patient.get_full_name|default:referral.patient.username }}</h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    {% for record in referral.medical_records.all %}
+                                                    <div class="card mb-3">
+                                                        <div class="card-header">
+                                                            <h6>Treatment on {{ record.created_at|date:"M d, Y" }}</h6>
+                                                        </div>
+                                                        <div class="card-body">
+                                                            <h6>Diagnosis:</h6>
+                                                            <p>{{ record.diagnosis }}</p>
+                                                            <h6>Medication/Treatment:</h6>
+                                                            <p>{{ record.medication }}</p>
                                                         </div>
                                                     </div>
+                                                    {% endfor %}
                                                 </div>
-                                            {% else %}
-                                                <a href="{% url 'treat_referred_patient' referral.id %}" class="btn btn-primary btn-sm">Treat Patient</a>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                        {% else %}
-                        <div class="text-center py-4">
-                            <p class="text-muted">No accepted referrals.</p>
-                        </div>
-                        {% endif %}
-                    </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-                
-                <!-- Rejected Referrals -->
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-danger">Rejected Referrals</h6>
-                    </div>
-                    <div class="card-body">
-                        {% if rejected_referrals %}
-                        <div class="table-responsive">
-                            <table class="table table-bordered" width="100%" cellspacing="0">
-                                <thead>
-                                    <tr>
-                                        <th>Patient</th>
-                                        <th>Referred By</th>
-                                        <th>Reason</th>
-                                        <th>Date</th>
-                                        <th>Notes</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for referral in rejected_referrals %}
-                                    <tr>
-                                        <td>{{ referral.patient.get_full_name|default:referral.patient.username }}</td>
-                                        <td>Dr. {{ referral.referring_doctor.user.get_full_name|default:referral.referring_doctor.user.username }}</td>
-                                        <td>{{ referral.reason }}</td>
-                                        <td>{{ referral.created_at|date:"M d, Y" }}</td>
-                                        <td>{{ referral.notes }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                        {% else %}
-                        <div class="text-center py-4">
-                            <p class="text-muted">No rejected referrals.</p>
-                        </div>
-                        {% endif %}
-                    </div>
+                {% else %}
+                <p class="text-center text-muted">No treated referrals.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Rejected Referrals Section -->
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-danger">Rejected Referrals</h6>
+            </div>
+            <div class="card-body">
+                {% if rejected_referrals %}
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Patient</th>
+                                <th>Referring Doctor</th>
+                                <th>Reason</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for referral in rejected_referrals %}
+                            <tr>
+                                <td>{{ referral.patient.get_full_name|default:referral.patient.username }}</td>
+                                <td>Dr. {{ referral.referring_doctor.user.get_full_name|default:referral.referring_doctor.user.username }}</td>
+                                <td>{{ referral.reason }}</td>
+                                <td>{{ referral.created_at|date:"M d, Y" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
+                {% else %}
+                <p class="text-center text-muted">No rejected referrals.</p>
+                {% endif %}
             </div>
         </div>
     </div>

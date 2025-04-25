@@ -96,40 +96,7 @@ class Appointment(models.Model):
 
     def __str__(self):
         return f"Appointment: {self.name or self.patient} with Dr. {self.doctor} on {self.date}"
-
-
-# MedicalRecord model
-class MedicalRecord(models.Model):
-    patient = models.ForeignKey(
-        get_user_model(),
-        on_delete=models.CASCADE,
-        related_name="medical_records"
-    )
-    doctor = models.ForeignKey(
-        Doctor,
-        on_delete=models.CASCADE,
-        related_name="medical_records"
-    )
-    diagnosis = models.TextField()
-    medication = models.TextField()
-    referred_to = models.ForeignKey(
-        Doctor,
-        null=True,
-        blank=True,
-        related_name="referrals",
-        on_delete=models.SET_NULL
-    )
-    department_sent_to = models.CharField(max_length=255, blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def clean(self):
-        if self.patient.role != 'patient':
-            raise ValidationError("Patient must have role 'patient'.")
-
-    def __str__(self):
-        return f"Medical Record for {self.patient} by Dr. {self.doctor} ({self.created_at.date()})"
-
-
+    
 # PatientReferral model
 class PatientReferral(models.Model):
     STATUS_CHOICES = [
@@ -161,6 +128,7 @@ class PatientReferral(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     department = models.CharField(max_length=255, blank=True, null=True)
+    is_treated = models.BooleanField(default=False)  # New field to track if referral has been treated
 
     def clean(self):
         # Ensures patient has the correct role
@@ -172,3 +140,52 @@ class PatientReferral(models.Model):
 
     def __str__(self):
         return f"Referral for {self.patient} from Dr. {self.referring_doctor} to Dr. {self.referred_doctor} ({self.created_at.date()})"
+    
+    @property
+    def has_treatment(self):
+        """Check if there are medical records associated with this referral"""
+        return self.medical_records.exists()
+
+
+
+
+
+# MedicalRecord model
+class MedicalRecord(models.Model):
+    patient = models.ForeignKey(
+        get_user_model(),
+        on_delete=models.CASCADE,
+        related_name="medical_records"
+    )
+    doctor = models.ForeignKey(
+        Doctor,
+        on_delete=models.CASCADE,
+        related_name="medical_records"
+    )
+    diagnosis = models.TextField()
+    medication = models.TextField()
+    referred_to = models.ForeignKey(
+        Doctor,
+        null=True,
+        blank=True,
+        related_name="referrals",
+        on_delete=models.SET_NULL
+    )
+    department_sent_to = models.CharField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    referral = models.ForeignKey(
+        PatientReferral,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="medical_records"
+    )
+
+    def clean(self):
+        if self.patient.role != 'patient':
+            raise ValidationError("Patient must have role 'patient'.")
+
+    def __str__(self):
+        return f"Medical Record for {self.patient} by Dr. {self.doctor} ({self.created_at.date()})"
+
+

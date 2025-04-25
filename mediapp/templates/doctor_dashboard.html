@@ -7,55 +7,55 @@
         <h2 style="font-weight: 600; color: #333;">Doctor Dashboard</h2>
     </div>
     
-   <!-- Pending Referrals Section -->
-<div class="table-section" style="margin-bottom: 2rem;">
-    <h3 style="color: #495057; margin-bottom: 1rem;">Pending Referrals</h3>
-    <div class="table-responsive" style="border-radius: 0.5rem; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
-        <table class="table table-bordered" style="margin-bottom: 0; width: 100%; border-collapse: collapse;">
-            <thead style="background-color: #f8f9fa;">
-                <tr>
-                    <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Patient</th>
-                    <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Referring Doctor</th>
-                    <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Department</th>
-                    <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Reason</th>
-                    <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Date Referred</th>
-                    <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for referral in pending_referrals %}
-                <tr>
-                    <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ referral.patient.username }}</td>
-                    <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ referral.referring_doctor.user.username }}</td>
-                    <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ referral.department }}</td>
-                    <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ referral.reason }}</td>
-                    <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ referral.created_at|date:"M d, Y" }}</td>
-                    <td class="action-buttons" style="padding: 12px 15px; border: 1px solid #dee2e6;">
-                        <form method="post" action="{% url 'update_referral_status' referral.id %}" class="d-inline">
-                            {% csrf_token %}
-                            <input type="hidden" name="status" value="accepted">
-                            <button type="submit" class="btn btn-success btn-sm" style="background-color: #28a745; color: #fff; border: none; padding: 5px 10px; border-radius: 3px; margin-right: 5px;">
-                                Accept
-                            </button>
-                        </form>
-                        <form method="post" action="{% url 'update_referral_status' referral.id %}" class="d-inline">
-                            {% csrf_token %}
-                            <input type="hidden" name="status" value="rejected">
-                            <button type="submit" class="btn btn-danger btn-sm" style="background-color: #dc3545; color: #fff; border: none; padding: 5px 10px; border-radius: 3px;">
-                                Reject
-                            </button>
-                        </form>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="6" class="text-center" style="padding: 12px 15px; border: 1px solid #dee2e6;">No pending referrals</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <!-- Pending Referrals Section -->
+    <div class="table-section" style="margin-bottom: 2rem;">
+        <h3 style="color: #495057; margin-bottom: 1rem;">Pending Referrals</h3>
+        <div class="table-responsive" style="border-radius: 0.5rem; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+            <table class="table table-bordered" style="margin-bottom: 0; width: 100%; border-collapse: collapse;">
+                <thead style="background-color: #f8f9fa;">
+                    <tr>
+                        <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Patient</th>
+                        <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Referring Doctor</th>
+                        <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Department</th>
+                        <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Reason</th>
+                        <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Date Referred</th>
+                        <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for referral in pending_referrals %}
+                    <tr>
+                        <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ referral.patient.username }}</td>
+                        <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ referral.referring_doctor.user.username }}</td>
+                        <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ referral.department }}</td>
+                        <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ referral.reason }}</td>
+                        <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ referral.created_at|date:"M d, Y" }}</td>
+                        <td class="action-buttons" style="padding: 12px 15px; border: 1px solid #dee2e6;">
+                            <form method="post" action="{% url 'update_referral_status' referral.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="accepted">
+                                <button type="submit" class="btn btn-success btn-sm" style="background-color: #28a745; color: #fff; border: none; padding: 5px 10px; border-radius: 3px; margin-right: 5px;">
+                                    Accept
+                                </button>
+                            </form>
+                            <form method="post" action="{% url 'update_referral_status' referral.id %}" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="rejected">
+                                <button type="submit" class="btn btn-danger btn-sm" style="background-color: #dc3545; color: #fff; border: none; padding: 5px 10px; border-radius: 3px;">
+                                    Reject
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center" style="padding: 12px 15px; border: 1px solid #dee2e6;">No pending referrals</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
-</div>
     
     <!-- Buttons Section -->
     <div class="dashboard-buttons" style="background-color: #f8f9fa; padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 2rem;">
@@ -81,9 +81,15 @@
         <a href="https://meet.google.com/bdu-vfen-nwx" class="btn btn-dark" style="background-color: #343a40; color: #fff; border: none; padding: 8px 16px; border-radius: 4px;" target="_blank">Start Voice Call</a>
     
         <h3 style="color: #495057; margin-bottom: 1rem; margin-top: 1.5rem;">Referrals</h3>
-        <a href="{% url 'refer_patient' %}" class="btn btn-secondary" style="background-color: #6c757d; color: #fff; border: none; padding: 8px 16px; border-radius: 4px;">Refer Patient</a>
+        <div class="referrals-links" style="margin-bottom: 1rem;">
+            <a href="{% url 'refer_patient' %}" class="btn btn-primary" style="background-color: #007bff; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; margin-right: 10px;">Refer Patient</a>
+            <a href="{% url 'view_outgoing_referrals' %}" class="btn btn-info" style="background-color: #17a2b8; color: #fff; border: none; padding: 8px 16px; border-radius: 4px; margin-right: 10px;">Outgoing Referrals</a>
+            <a href="{% url 'view_incoming_referrals' %}" class="btn btn-secondary" style="background-color: #6c757d; color: #fff; border: none; padding: 8px 16px; border-radius: 4px;">Incoming Referrals</a>
+        </div>
+        
     </div>
 
+    <!-- Recent Medical Records Section -->
     <div class="table-section" style="margin-bottom: 2rem;">
         <h3 style="color: #495057; margin-bottom: 1rem;">Recent Medical Records</h3>
         <div class="table-responsive" style="border-radius: 0.5rem; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
@@ -136,6 +142,7 @@
         </div>
     </div>
 
+    <!-- All Referrals Section -->
     <div class="table-section" style="margin-bottom: 2rem;">
         <h3 style="color: #495057; margin-bottom: 1rem;">All Referrals</h3>
         <div class="table-responsive" style="border-radius: 0.5rem; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
@@ -148,6 +155,7 @@
                         <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Reason</th>
                         <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Status</th>
                         <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Date</th>
+                        <th style="padding: 12px 15px; border: 1px solid #dee2e6;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -163,10 +171,16 @@
                             </span>
                         </td>
                         <td style="padding: 12px 15px; border: 1px solid #dee2e6;">{{ referral.created_at|date:"M d, Y" }}</td>
+                        <td class="action-buttons" style="padding: 12px 15px; border: 1px solid #dee2e6;">
+                            <a href="{% url 'update_referral_status' referral.id %}" class="btn btn-info btn-sm" style="background-color: #17a2b8; color: #fff; border: none; padding: 5px 10px; border-radius: 3px; margin-right: 5px;">Update</a>
+                            {% if referral.status == 'accepted' %}
+                            <a href="{% url 'treat_referred_patient' referral.id %}" class="btn btn-success btn-sm" style="background-color: #28a745; color: #fff; border: none; padding: 5px 10px; border-radius: 3px;">Treat</a>
+                            {% endif %}
+                        </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="text-center" style="padding: 12px 15px; border: 1px solid #dee2e6;">No referrals found</td>
+                        <td colspan="7" class="text-center" style="padding: 12px 15px; border: 1px solid #dee2e6;">No referrals found</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -174,6 +188,7 @@
         </div>
     </div>
 
+    <!-- Upcoming Appointments Section -->
     <div class="table-section" style="margin-bottom: 2rem;">
         <h3 style="color: #495057; margin-bottom: 1rem;">Upcoming Appointments</h3>
         <div class="table-responsive" style="border-radius: 0.5rem; overflow: hidden; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
@@ -280,9 +295,8 @@
     </div>
 </div>
 
-<!-- JavaScript for handling the modals - ensure it loads after jQuery -->
+<!-- JavaScript for handling the modals -->
 <script>
-// Wait for the document to be fully loaded
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof jQuery !== 'undefined') {
         // Edit record functionality
@@ -391,7 +405,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<!-- Ensure Bootstrap and jQuery are loaded if not in the base template -->
+<!-- External libraries -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.min.js"></script>

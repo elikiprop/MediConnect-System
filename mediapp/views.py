@@ -9,10 +9,12 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.contrib import messages
-from .forms import DoctorRegistrationForm, RegisterForm, LoginForm, MedicalRecordForm, PatientReferralForm, ContactForm, AppointmentForm
+from .forms import RegisterForm, LoginForm, MedicalRecordForm, PatientReferralForm, ContactForm, AppointmentForm
 from .models import Appointment, MedicalRecord, CustomUser, Doctor, PatientReferral
 from .utils import send_email_notification, get_doctor_email
 import uuid
+import json
+from django.http import JsonResponse
 
 # Home Page
 @login_required(login_url='login')
@@ -668,14 +670,35 @@ def view_incoming_referrals(request):
     
     # Split by status for better UI organization
     pending_referrals = incoming_referrals.filter(status='pending')
-    accepted_referrals = incoming_referrals.filter(status='accepted')
+    accepted_referrals = incoming_referrals.filter(status='accepted', is_treated=False)  # Only show untreated
+    treated_referrals = incoming_referrals.filter(status='accepted', is_treated=True)    # Track treated separately
     rejected_referrals = incoming_referrals.filter(status='rejected')
     
     return render(request, 'view_incoming_referrals.html', {
         'pending_referrals': pending_referrals,
         'accepted_referrals': accepted_referrals,
+        'treated_referrals': treated_referrals,
         'rejected_referrals': rejected_referrals
     })
+@login_required
+def check_treatment_status(request):
+    """AJAX endpoint to check if referrals have been treated"""
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        try:
+            referral_ids = json.loads(request.POST.get('referral_ids', '[]'))
+            treated_referrals = PatientReferral.objects.filter(
+                id__in=referral_ids,
+                is_treated=True
+            ).values_list('id', flat=True)
+            
+            return JsonResponse({
+                'status': 'success',
+                'treated_referrals': list(treated_referrals)
+            })
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'})
 
 # Add a view to create a medical record for a referred patient
 @login_required(login_url='login')
@@ -690,9 +713,19 @@ def treat_referred_patient(request, referral_id):
         messages.error(request, "Doctor profile not found.")
         return redirect('home')
     
-    # Get the referral and check if this doctor is the referred doctor
-    referral = get_object_or_404(PatientReferral, id=referral_id)
+    # Get the referral and verify it exists
+    try:
+        referral = PatientReferral.objects.get(id=referral_id)
+    except PatientReferral.DoesNotExist:
+        messages.error(request, f"No referral found with ID {referral_id}")
+        return redirect('doctor_dashboard')
     
+    # Verify that referral.patient actually exists and is valid
+    if not referral.patient:
+        messages.error(request, "This referral has no patient associated with it!")
+        return redirect('view_incoming_referrals')
+    
+    # Additional checks
     if referral.referred_doctor != doctor:
         messages.error(request, "You can only treat patients referred to you.")
         return redirect('doctor_dashboard')
@@ -701,38 +734,58 @@ def treat_referred_patient(request, referral_id):
         messages.error(request, "You must accept the referral before treating the patient.")
         return redirect('view_incoming_referrals')
     
-    # Now we can treat the patient - create a medical record form
     if request.method == 'POST':
-        form = MedicalRecordForm(request.POST)
-        if form.is_valid():
-            medical_record = form.save(commit=False)
-            medical_record.patient = referral.patient
-            medical_record.doctor = doctor
-            medical_record.referral = referral  # Link the medical record to the referral
-            medical_record.save()
-            
-            # Optionally notify the referring doctor
-            referring_doctor_email = get_doctor_email(referral.referring_doctor)
-            if referring_doctor_email:
-                send_email_notification(
-                    referring_doctor_email,
-                    "Referred Patient Treatment Update",
-                    f"Dr. {doctor.user.get_full_name() or doctor.user.username} has treated your referred patient {referral.patient.get_full_name() or referral.patient.username}."
+        # Get the form data
+        diagnosis = request.POST.get('diagnosis', '')
+        medication = request.POST.get('medication', '')
+        
+        if not diagnosis or not medication:
+            messages.error(request, "Both diagnosis and medication are required.")
+        else:
+            try:
+                # Create the medical record directly
+                medical_record = MedicalRecord(
+                    patient=referral.patient,
+                    doctor=doctor,
+                    diagnosis=diagnosis,
+                    medication=medication,
+                    referral=referral  # Link the medical record to the referral
                 )
-            
-            messages.success(request, "Medical record created for referred patient!")
-            return redirect('view_incoming_referrals')
-    else:
-        form = MedicalRecordForm(initial={
-            'patient': referral.patient,
-            'doctor': doctor
-        })
+                medical_record.save()
+                
+                # Mark the referral as treated
+                referral.is_treated = True
+                referral.save()
+                
+                # Notify the referring doctor
+                try:
+                    referring_doctor = referral.referring_doctor
+                    if referring_doctor and hasattr(referring_doctor, 'user') and referring_doctor.user.email:
+                        send_mail(
+                            f"Patient Treatment Update: {referral.patient.get_full_name() or referral.patient.username}",
+                            f"Your referred patient has been treated by Dr. {doctor.user.get_full_name() or doctor.user.username}.\n\nDiagnosis: {diagnosis}\n\nMedication: {medication}",
+                            settings.DEFAULT_FROM_EMAIL,
+                            [referring_doctor.user.email],
+                            fail_silently=True
+                        )
+                except Exception as e:
+                    print(f"Email sending error: {str(e)}")
+                
+                messages.success(request, "Medical record created for referred patient!")
+                return redirect('view_incoming_referrals')
+            except Exception as e:
+                import traceback
+                print(f"Error creating record: {str(e)}")
+                print(traceback.format_exc())
+                messages.error(request, f"Error: {str(e)}")
     
-    return render(request, 'treat_referred_patient.html', {
-        'form': form,
-        'referral': referral
-    })
-
+    # For GET requests or if there's an error
+    context = {
+        'referral': referral,
+        'patient': referral.patient,
+        'doctor': doctor
+    }
+    return render(request, 'treat_referred_patient.html', context)
 
 # Modify the doctor_dashboard view to include outgoing referrals
 @login_required(login_url='login')

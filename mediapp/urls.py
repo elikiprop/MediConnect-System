@@ -38,5 +38,9 @@ urlpatterns = [
     path('referrals/outgoing/', views.view_outgoing_referrals, name='view_outgoing_referrals'),
     path('referrals/incoming/', views.view_incoming_referrals, name='view_incoming_referrals'),
     path('referrals/treat/<int:referral_id>/', views.treat_referred_patient, name='treat_referred_patient'),
+    
+    
+    path('check-treatment-status/', views.check_treatment_status, name='check_treatment_status'),
+
 
 ]

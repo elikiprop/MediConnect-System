@@ -1,69 +1,56 @@
+{# treat_referred_patient.html #}
 {% extends 'base.html' %}
 {% block title %}Treat Referred Patient{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-5">
     <div class="container">
-        <div class="row">
-            <div class="col-lg-8 mx-auto">
-                <div class="card shadow mb-4">
-                    <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Treat Referred Patient</h6>
+        <div class="row mb-3">
+            <div class="col-6">
+                <h2 class="mb-0">Treat Referred Patient</h2>
+            </div>
+            <div class="col-6 text-end">
+                <a href="{% url 'view_incoming_referrals' %}" class="btn btn-outline-secondary">
+                    ← Back to Referrals
+                </a>
+            </div>
+        </div>
+        
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Patient Information</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Patient:</strong> {{ patient.get_full_name|default:patient.username }}</p>
+                        <p><strong>Email:</strong> {{ patient.email }}</p>
                     </div>
-                    <div class="card-body">
-                        <div class="mb-4">
-                            <h5>Patient Information</h5>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <p><strong>Name:</strong> {{ referral.patient.get_full_name|default:referral.patient.username }}</p>
-                                    <p><strong>Referred By:</strong> Dr. {{ referral.referring_doctor.user.get_full_name|default:referral.referring_doctor.user.username }}</p>
-                                </div>
-                                <div class="col-md-6">
-                                    <p><strong>Referral Date:</strong> {{ referral.created_at|date:"M d, Y" }}</p>
-                                    <p><strong>Reason for Referral:</strong> {{ referral.reason }}</p>
-                                </div>
-                            </div>
-                            
-                            {% if referral.notes %}
-                            <div class="card bg-light mb-4">
-                                <div class="card-body">
-                                    <h6>Notes from Referring Doctor:</h6>
-                                    <p>{{ referral.notes }}</p>
-                                </div>
-                            </div>
-                            {% endif %}
-                        </div>
-                        
-                        <h5>Create Medical Record</h5>
-                        <form method="post">
-                            {% csrf_token %}
-                            <div class="form-group">
-                                <label for="{{ form.diagnosis.id_for_label }}">Diagnosis:</label>
-                                {{ form.diagnosis }}
-                                {% if form.diagnosis.errors %}
-                                <div class="text-danger">
-                                    {{ form.diagnosis.errors }}
-                                </div>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="{{ form.medication.id_for_label }}">Medication/Treatment Plan:</label>
-                                {{ form.medication }}
-                                {% if form.medication.errors %}
-                                <div class="text-danger">
-                                    {{ form.medication.errors }}
-                                </div>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="mt-4">
-                                <button type="submit" class="btn btn-primary">Save Medical Record</button>
-                                <a href="{% url 'view_incoming_referrals' %}" class="btn btn-secondary">Cancel</a>
-                            </div>
-                        </form>
+                    <div class="col-md-6">
+                        <p><strong>Referring Doctor:</strong> Dr. {{ referral.referring_doctor.user.get_full_name|default:referral.referring_doctor.user.username }}</p>
+                        <p><strong>Reason for Referral:</strong> {{ referral.reason }}</p>
                     </div>
                 </div>
+            </div>
+        </div>
+        
+        <div class="card shadow">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Add Medical Record</h6>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'treat_referred_patient' referral.id %}">
+                    {% csrf_token %}
+                    <div class="form-group mb-3">
+                        <label for="diagnosis">Diagnosis</label>
+                        <textarea class="form-control" id="diagnosis" name="diagnosis" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="medication">Medication/Treatment</label>
+                        <textarea class="form-control" id="medication" name="medication" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit Treatment</button>
+                </form>
             </div>
         </div>
     </div>
