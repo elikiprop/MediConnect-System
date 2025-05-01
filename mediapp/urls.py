@@ -25,22 +25,37 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     path('logout/', views.user_logout, name='logout'),
     path('notify-doctor/<int:appointment_id>/<str:call_type>/', views.notify_doctor, name='notify_doctor'),
-    path('add-medical-record/<int:patient_id>/', views.add_medical_record, name='add_medical_record'),
+    path('add-medical-record/', views.add_medical_record, name='add_medical_record'),  # Updated
     path('generate-pdf/<int:record_id>/', views.generate_pdf, name='generate_pdf'),
     path('start-video-call/', views.start_video_call, name='start_video_call'),
     path('start-voice-call/', views.start_voice_call, name='start_voice_call'),
     path('update_medical_record/<int:record_id>/', views.update_medical_record, name='update_medical_record'),
     path('delete-record/<int:record_id>/', views.delete_record, name='delete_record'),
     path('referral/<int:referral_id>/update/', views.update_referral_status, name='update_referral_status'),
-    
-    
-    
     path('referrals/outgoing/', views.view_outgoing_referrals, name='view_outgoing_referrals'),
     path('referrals/incoming/', views.view_incoming_referrals, name='view_incoming_referrals'),
     path('referrals/treat/<int:referral_id>/', views.treat_referred_patient, name='treat_referred_patient'),
-    
-    
     path('check-treatment-status/', views.check_treatment_status, name='check_treatment_status'),
-
+    path('add-prescription/', views.add_prescription, name='add_prescription'),
+    path('delete-prescription/<int:prescription_id>/', views.delete_prescription, name='delete_prescription'),
+    path('edit-prescription/', views.edit_prescription, name='edit_prescription'),
+    path('get-prescription/<int:prescription_id>/', views.get_prescription, name='get_prescription'),
+    path('add-note/', views.add_note, name='add_note'),
+    path('edit-note/', views.edit_note, name='edit_note'),
+    path('delete-note/<int:note_id>/', views.delete_note, name='delete_note'),
+    path('get-appointments/', views.get_appointments, name='get_appointments'),
+    path('get-patient-history/', views.get_patient_history, name='get_patient_history'),
+    path('schedule-appointment/', views.schedule_appointment, name='schedule_appointment'),
+    path('add-lab-result/', views.add_lab_result, name='add_lab_result'),  # Added
+    
+    
+    
+    
+    path('add-user/', views.add_user, name='add_user'),
+    path('edit-user/', views.edit_user, name='edit_user'),
+    path('delete-user/<int:user_id>/', views.delete_user, name='delete_user'),
+    path('get-user/<int:user_id>/', views.get_user, name='get_user'),
+    path('generate-system-report/', views.generate_system_report, name='generate_system_report'),
+    path('get-all-appointments/', views.get_all_appointments, name='get_all_appointments'),
 
 ]

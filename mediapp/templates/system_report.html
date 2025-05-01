@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MediConnect System Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            border: 1px solid #ddd;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #007bff;
+        }
+        .header h1 {
+            color: #007bff;
+            margin: 0;
+        }
+        .stats {
+            margin-bottom: 20px;
+        }
+        .stats p {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>MediConnect System Report</h1>
+            <p>Generated on {{ report_date }}</p>
+        </div>
+        <div class="stats">
+            <h2>System Statistics</h2>
+            <p><strong>Total Users:</strong> {{ total_users }}</p>
+            <p><strong>Total Patients:</strong> {{ total_patients }}</p>
+            <p><strong>Total Doctors:</strong> {{ total_doctors }}</p>
+            <p><strong>Total Appointments:</strong> {{ total_appointments }}</p>
+            <p><strong>Total Referrals:</strong> {{ total_referrals }}</p>
+            <p><strong>Pending Referrals:</strong> {{ pending_referrals }}</p>
+        </div>
+        <div class="footer">
+            <p>MediConnect System © {{ report_date|date:"Y" }}</p>
+        </div>
+    </div>
+</body>
+</html>
