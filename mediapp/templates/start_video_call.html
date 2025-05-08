@@ -1,18 +1,128 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Start Video Consultation{% endblock %}
 
 {% block content %}
-<div class="container d-flex flex-column justify-content-center align-items-center" style="min-height: 80vh;">
-    <h2 class="text-center mb-4">Video Consultation</h2>
-    <p class="text-center mb-4">This page will allow the doctor to start a video call with the patient.</p>
-
-    <!-- Start Consultation Button -->
-    <div class="d-flex justify-content-center mb-4">
-        <a href="{% url 'start_video_call' %}" class="btn btn-success btn-lg">Start Video Call</a>
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <!-- Main Card -->
+            <div class="card shadow-sm border-0 rounded-lg">
+                <!-- Card Header -->
+                <div class="card-header bg-gradient-primary-to-secondary text-white">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-video me-3 fa-2x"></i>
+                        <h3 class="mb-0 fw-bold">Video Consultation</h3>
+                    </div>
+                </div>
+                
+                <!-- Card Body -->
+                <div class="card-body p-5">
+                    <div class="text-center mb-5">
+                        <p class="lead text-muted">Connect with your patient in real-time through a secure video consultation.</p>
+                    </div>
+                    
+                    <!-- Instructions -->
+                    <div class="alert alert-light border mb-4">
+                        <h5 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Before You Begin</h5>
+                        <hr>
+                        <ul class="mb-0">
+                            <li>Ensure you have a stable internet connection</li>
+                            <li>Test your camera and microphone</li>
+                            <li>Find a quiet, well-lit environment</li>
+                            <li>Have patient records ready for reference</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Start Consultation Button -->
+                    <div class="d-flex justify-content-center my-4">
+                        <a href="https://meet.google.com/bdu-vfen-nwx" class="btn btn-primary btn-lg px-5 py-3" id="startVideoCallBtn" target="_blank">
+                            <i class="fas fa-video me-2"></i> Start Video Consultation
+                        </a>
+                    </div>
+                    
+                    <!-- Reminder Text -->
+                    <p class="text-center text-muted small mt-3">
+                        <i class="fas fa-lock me-1"></i> All consultations are secure and HIPAA-compliant
+                    </p>
+                </div>
+                
+                <!-- Card Footer -->
+                <div class="card-footer bg-light d-flex justify-content-between align-items-center py-3">
+                    <a href="{% url 'doctor_dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+                    </a>
+                    <a href="#" class="text-decoration-none text-muted" data-bs-toggle="modal" data-bs-target="#helpModal">
+                        <i class="fas fa-question-circle me-1"></i> Need Help?
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <!-- Back to Dashboard Button -->
-    <a href="{% url 'doctor_dashboard' %}" class="btn btn-secondary">← Back to Medical Records</a>
 </div>
+
+<!-- Help Modal -->
+<div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title" id="helpModalLabel"><i class="fas fa-question-circle me-2"></i>Video Consultation Help</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Common Issues:</h6>
+                <ul>
+                    <li><strong>No audio or video:</strong> Check your browser permissions and device settings</li>
+                    <li><strong>Connection problems:</strong> Try refreshing the page or using a different browser</li>
+                    <li><strong>Meeting link not working:</strong> Contact IT support at elikiprop42@gmail.com</li>
+                </ul>
+                <hr>
+                <p class="mb-0">For additional support, call our technical team at (+254) 717677588</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add custom styles for the gradient header -->
+<style>
+    .bg-gradient-primary-to-secondary {
+        background: linear-gradient(135deg, #4e73df 0%, #36b9cc 100%);
+    }
+    
+    /* Override button style to match your theme */
+    #startVideoCallBtn {
+        background-color: #1cc88a;
+        border-color: #1cc88a;
+        box-shadow: 0 4px 6px rgba(28, 200, 138, 0.2);
+        transition: all 0.2s;
+    }
+    
+    #startVideoCallBtn:hover {
+        background-color: #169b6b;
+        border-color: #169b6b;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(28, 200, 138, 0.3);
+    }
+</style>
+
+<script>
+    document.getElementById('startVideoCallBtn').addEventListener('click', function(e) {
+        // Change button appearance when clicked
+        this.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Joining consultation...';
+        this.classList.add('active');
+        
+        // Log the consultation start (optional)
+        console.log('Video consultation initiated at: ' + new Date().toLocaleString());
+        
+        // Restore button after a delay (since it's opening in a new tab)
+        setTimeout(() => {
+            this.innerHTML = '<i class="fas fa-video me-2"></i> Start Video Consultation';
+            this.classList.remove('active');
+        }, 3000);
+    });
+</script>
 {% endblock %}

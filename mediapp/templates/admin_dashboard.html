@@ -47,7 +47,7 @@
                     <button class="btn btn-success btn-sm mr-2" data-toggle="modal" data-target="#scheduleAppointmentModal">
                         <i class="fas fa-calendar-plus mr-1"></i> Schedule Appointment
                     </button>
-                    <a href="{% url 'mediapp:generate_system_report' %}" class="btn btn-info btn-sm">
+                    <a href="{% url 'generate_system_report' %}" class="btn btn-info btn-sm">
                         <i class="fas fa-file-alt mr-1"></i> Generate Report
                     </a>
                 </div>
@@ -109,7 +109,7 @@
                                     <td>{{ user.email }}</td>
                                     <td>
                                         <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editUserModal" data-id="{{ user.id }}">Edit</button>
-                                        <form action="{% url 'mediapp:delete_user' user.id %}" method="post" style="display:inline;">
+                                        <form action="{% url 'delete_user' user.id %}" method="post" style="display:inline;">
                                             {% csrf_token %}
                                             <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this user?')">Delete</button>
                                         </form>
@@ -158,7 +158,7 @@
                                     <td>{{ appointment.time|time:"h:i A" }}</td>
                                     <td>
                                         <button class="btn btn-sm btn-warning" data-toggle="modal" data-target="#editAppointmentModal{{ appointment.id }}">Edit</button>
-                                        <form action="{% url 'mediapp:delete_appointment' appointment.id %}" method="post" style="display:inline;">
+                                        <form action="{% url 'delete_appointment' appointment.id %}" method="post" style="display:inline;">
                                             {% csrf_token %}
                                             <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this appointment?')">Delete</button>
                                         </form>
@@ -174,7 +174,7 @@
                                                     <span aria-hidden="true">&times;</span>
                                                 </button>
                                             </div>
-                                            <form action="{% url 'mediapp:edit_appointment' appointment.id %}" method="post">
+                                            <form method="post">
                                                 {% csrf_token %}
                                                 <div class="modal-body">
                                                     <div class="form-group">
@@ -258,12 +258,12 @@
                                     <td>{{ referral.reason|truncatechars:50 }}</td>
                                     <td>{{ referral.status|title }}</td>
                                     <td>
-                                        <form action="{% url 'mediapp:update_referral_status' referral.id %}" method="post" style="display:inline;">
+                                        <form action="{% url 'update_referral_status' referral.id %}" method="post" style="display:inline;">
                                             {% csrf_token %}
                                             <input type="hidden" name="status" value="accepted">
                                             <button type="submit" class="btn btn-sm btn-success">Accept</button>
                                         </form>
-                                        <form action="{% url 'mediapp:update_referral_status' referral.id %}" method="post" style="display:inline;">
+                                        <form action="{% url 'update_referral_status' referral.id %}" method="post" style="display:inline;">
                                             {% csrf_token %}
                                             <input type="hidden" name="status" value="rejected">
                                             <button type="submit" class="btn btn-sm btn-danger">Reject</button>
@@ -294,7 +294,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form method="post" action="{% url 'mediapp:add_user' %}">
+                    <form method="post" action="{% url 'add_user' %}">
                         {% csrf_token %}
                         <div class="form-group">
                             <label for="username">Username</label>
@@ -333,7 +333,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form method="post" action="{% url 'mediapp:edit_user' %}">
+                    <form method="post" action="{% url 'edit_user' %}">
                         {% csrf_token %}
                         <input type="hidden" id="edit_user_id" name="user_id">
                         <div class="form-group">
@@ -369,7 +369,7 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form method="post" action="{% url 'mediapp:schedule_appointment' %}">
+                    <form method="post" action="{% url 'schedule_appointment' %}">
                         {% csrf_token %}
                         <div class="form-group">
                             <label for="appt_patient">Patient</label>
@@ -417,7 +417,7 @@
         if (calendarEl) {
             var calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
-                events: '{% url "mediapp:get_all_appointments" %}',
+                events: '{% url "get_all_appointments" %}',
                 eventClick: function(info) {
                     alert('Appointment: ' + info.event.title + '\nTime: ' + info.event.start.toLocaleString());
                 },
@@ -438,7 +438,7 @@
             var modal = $(this);
             modal.find('#edit_user_id').val(id);
             $.ajax({
-                url: '{% url "mediapp:get_user" id=0 %}'.replace('0', id),
+                
                 method: 'GET',
                 success: function(data) {
                     modal.find('#edit_username').val(data.username);

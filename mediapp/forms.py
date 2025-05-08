@@ -8,12 +8,12 @@ class MedicalRecordForm(forms.ModelForm):
     patient = forms.ModelChoiceField(
         queryset=CustomUser.objects.filter(role='patient'),
         widget=forms.HiddenInput(),
-        required=True
+        required=True  # Changed to True - this is crucial
     )
     doctor = forms.ModelChoiceField(
         queryset=Doctor.objects.all(),
         widget=forms.HiddenInput(),
-        required=True
+        required=True  # Changed to True - this is crucial
     )
     diagnosis = forms.CharField(
         widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
@@ -37,6 +37,14 @@ class MedicalRecordForm(forms.ModelForm):
     class Meta:
         model = MedicalRecord
         fields = ['patient', 'doctor', 'diagnosis', 'medication', 'referred_to', 'department_sent_to']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # If instance is provided, make sure referred_to excludes the current doctor
+        if 'initial' in kwargs and 'doctor' in kwargs['initial']:
+            current_doctor = kwargs['initial']['doctor']
+            if current_doctor:
+                self.fields['referred_to'].queryset = Doctor.objects.exclude(id=current_doctor.id)
 
     def clean(self):
         cleaned_data = super().clean()
@@ -232,18 +240,12 @@ class AppointmentForm(forms.Form):
             ('General Medicine', 'General Medicine'),
             ('Surgery', 'Surgery'),
             ('Pediatrics', 'Pediatrics'),
-            ('Gynecology and Obstetrics', 'Gynecology and Obstetrics'),
             ('Cardiology', 'Cardiology'),
             ('Neurology', 'Neurology'),
             ('Oncology', 'Oncology'),
             ('Orthopedics', 'Orthopedics'),
-            ('Radiology and Imaging', 'Radiology and Imaging'),
-            ('Pathology and Laboratory', 'Pathology and Laboratory'),
-            ('Pharmacy', 'Pharmacy'),
-            ('Psychiatry', 'Psychiatry'),
-            ('Dermatology', 'Dermatology'),
-            ('Endocrinology', 'Endocrinology'),
-            ('Gastroenterology', 'Gastroenterology'),
+            
+           
         ],
         widget=forms.Select(attrs={"class": "form-select bg-light border-0"}),
         required=True

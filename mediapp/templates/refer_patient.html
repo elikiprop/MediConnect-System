@@ -61,7 +61,7 @@
             <!-- Department -->
             <div class="mb-3">
                 <label class="form-label" for="{{ form.department.id_for_label }}">Department</label>
-                {{ form.department }}
+                <select id="id_department" name="department" class="form-control"></select>
                 {% if form.department.errors %}
                     <div class="text-danger">
                         {% for error in form.department.errors %}
@@ -79,4 +79,25 @@
         </form>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        fetch('/ajax/get-departments/')
+            .then(response => response.json())
+            .then(data => {
+                const departmentSelect = document.getElementById('id_department');
+                departmentSelect.innerHTML = '<option value="">Choose Department</option>';
+                data.departments.forEach(([value, label]) => {
+                    const option = document.createElement('option');
+                    option.value = value;
+                    option.textContent = label;
+                    departmentSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading departments:', error);
+            });
+    });
+    </script>
+    
 {% endblock %}

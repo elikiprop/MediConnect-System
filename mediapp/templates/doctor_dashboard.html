@@ -98,6 +98,10 @@
                         <button class="btn btn-primary btn-sm mr-2" onclick="showAddRecordModal()">
                             <i class="fas fa-file-medical mr-1"></i> Add Medical Record
                         </button>
+                        <!-- Button to trigger modal -->
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLabResultModal">
+                            <i class="fas fa-flask me-2"></i>Add Lab Result
+                        </button>
                         <button class="btn btn-success btn-sm mr-2" onclick="showAddAppointmentModal()">
                             <i class="fas fa-calendar-plus mr-1"></i> Schedule Appointment
                         </button>
@@ -212,7 +216,6 @@
                                         <td>{{ record.created_at|date:"M d, Y" }}</td>
                                         <td>
                                             <a href="{% url 'generate_pdf' record.id %}" class="btn btn-sm btn-primary">PDF</a>
-                                            <a href="{% url 'update_medical_record' record.id %}" class="btn btn-sm btn-warning">Edit</a>
                                             <form action="{% url 'delete_record' record.id %}" method="post" style="display:inline;">
                                                 {% csrf_token %}
                                                 <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
@@ -554,43 +557,92 @@
             </div>
         </div>
 
+
+  
+  <!-- Modal Form -->
+  <div class="modal fade" id="addLabResultModal" tabindex="-1" aria-labelledby="addLabResultModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addLabResultModalLabel">Add New Lab Result</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form action="{% url 'add_lab_result' %}" method="POST">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="patient_id" class="form-label">Patient</label>
+              <select class="form-select" id="patient_id" name="patient_id" required>
+                <option value="" selected disabled>Select Patient</option>
+                {% for patient in patients %}
+                  <option value="{{ patient.id }}">{{ patient.get_full_name }} (ID: {{ patient.id }})</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="test_name" class="form-label">Test Name</label>
+              <input type="text" class="form-control" id="test_name" name="test_name" required>
+            </div>
+            <div class="mb-3">
+              <label for="result_value" class="form-label">Result Value</label>
+              <input type="text" class="form-control" id="result_value" name="result_value" required>
+            </div>
+            <div class="mb-3">
+              <label for="test_date" class="form-label">Test Date</label>
+              <input type="date" class="form-control" id="test_date" name="test_date" required>
+            </div>
+            <div class="mb-3">
+              <label for="status" class="form-label">Status</label>
+              <select class="form-select" id="status" name="status" required>
+                <option value="" selected disabled>Select Status</option>
+                <option value="Normal">Normal</option>
+                <option value="Abnormal">Abnormal</option>
+                <option value="Critical">Critical</option>
+                <option value="Pending">Pending</option>
+              </select>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">Save Lab Result</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
         <!-- Modals -->
-        <!-- Add Medical Record Modal -->
-        <div class="modal fade" id="addMedicalRecordModal" tabindex="-1" role="dialog" aria-labelledby="addMedicalRecordModalLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="addMedicalRecordModalLabel">Add Medical Record</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">×</span>
-                        </button>
+<!-- doctor_dashboard.html (Add Medical Record Modal) -->
+<div class="modal fade" id="addMedicalRecordModal" tabindex="-1" role="dialog" aria-labelledby="addMedicalRecordModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addMedicalRecordModalLabel">Add Medical Record</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="{% url 'add_medical_record' %}">
+                    {% csrf_token %}
+                    <p>Please select a patient to add a medical record.</p>
+                    <div class="form-group">
+                        <label for="record_patient">Patient</label>
+                        <select class="form-control" id="record_patient" name="patient_id" required>
+                            <option value="">-- Select Patient --</option>
+                            {% for patient in patients %}
+                                <option value="{{ patient.id }}">{{ patient.get_full_name }} ({{ patient.username }})</option>
+                            {% endfor %}
+                        </select>
                     </div>
-                    <div class="modal-body">
-                        <form method="post" action="{% url 'add_medical_record' %}">
-                            {% csrf_token %}
-                            <div class="form-group">
-                                <label for="record_patient">Patient</label>
-                                <select class="form-control" id="record_patient" name="patient_id" required>
-                                    {% for patient in patients %}
-                                    <option value="{{ patient.id }}">{{ patient.username }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="diagnosis">Diagnosis</label>
-                                <textarea class="form-control" id="diagnosis" name="diagnosis" rows="4" required></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label for="medication">Medication</label>
-                                <textarea class="form-control" id="medication" name="medication" rows="4" required></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Save Record</button>
-                        </form>
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Continue</button>
                     </div>
-                </div>
+                </form>
             </div>
         </div>
-
+    </div>
+</div>
         <!-- Schedule Appointment Modal -->
         <div class="modal fade" id="scheduleAppointmentModal" tabindex="-1" role="dialog" aria-labelledby="scheduleAppointmentModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
@@ -622,8 +674,19 @@
                             </div>
                             <div class="form-group">
                                 <label for="appt_department">Department</label>
-                                <input type="text" class="form-control" id="appt_department" name="department" required>
+                                <select class="form-control" id="appt_department" name="department" required>
+                                    <option value="">-- Select Department --</option>
+                                    <option value="Emergency Medicine">Emergency Medicine</option>
+                                    <option value="General Medicine">General Medicine</option>
+                                    <option value="Surgery">Surgery</option>
+                                    <option value="Pediatrics">Pediatrics</option>
+                                    <option value="Cardiology">Cardiology</option>
+                                    <option value="Neurology">Neurology</option>
+                                    <option value="Oncology">Oncology</option>
+                                    <option value="Orthopedics">Orthopedics</option>
+                                </select>
                             </div>
+                            
                             <button type="submit" class="btn btn-primary">Schedule Appointment</button>
                         </form>
                     </div>

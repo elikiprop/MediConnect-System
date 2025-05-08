@@ -169,34 +169,6 @@ def patient_dashboard(request):
 
 
 @login_required(login_url="login")
-def admin_dashboard(request):
-    username_filter = request.GET.get("username", "")
-    role_filter = request.GET.get("role", "")
-
-    users = User.objects.all()
-    if username_filter:
-        users = users.filter(username__icontains=username_filter)
-    if role_filter:
-        if role_filter == "patient":
-            users = users.filter(patient__isnull=False)
-        elif role_filter == "doctor":
-            users = users.filter(doctor__isnull=False)
-
-    appointments = Appointment.objects.all().select_related("patient", "doctor")
-    referrals = referrals.objects.all().select_related("patient", "referring_doctor", "referred_doctor")
-    patients = patients.objects.all().select_related("user")
-    doctors = Doctor.objects.all().select_related("user")
-
-    context = {
-        "users": users,
-        "appointments": appointments,
-        "referrals": referrals,
-        "patients": patients,
-        "doctors": doctors,
-    }
-    return render(request, "admin_dashboard.html", context)
-
-@login_required(login_url="login")
 def doctor_dashboard(request):
     if request.user.role != "doctor":
         messages.error(request, "Only doctors can access this dashboard.")
@@ -311,16 +283,25 @@ def add_medical_record(request, patient_id=None, record_id=None):
         messages.error(request, "You do not have a doctor profile.")
         return redirect("home")
 
-    if record_id:  # Editing
+    # Determine patient_id from URL, GET, or POST
+    patient_id = patient_id or request.GET.get("patient_id") or request.POST.get("patient_id")
+
+    if record_id:  # Editing existing record
         record = get_object_or_404(MedicalRecord, id=record_id, doctor=doctor)
         patient = record.patient
         is_edit = True
-    else:  # Adding
-        try:
-            patient = CustomUser.objects.get(id=patient_id, role="patient")
-        except CustomUser.DoesNotExist:
-            messages.error(request, "Patient not found or not a valid patient.")
-            return redirect("doctor_dashboard")
+    else:  # Adding new record
+        if patient_id:
+            try:
+                patient = CustomUser.objects.get(id=patient_id, role="patient")
+            except CustomUser.DoesNotExist:
+                messages.error(request, "Patient not found or not a valid patient.")
+                return redirect("doctor_dashboard")
+        else:
+            # Render patient selection page if no patient_id is provided
+            patients = CustomUser.objects.filter(role="patient")
+            return render(request, "select_patient.html", {"patients": patients})
+
         record = None
         is_edit = False
 
@@ -332,6 +313,20 @@ def add_medical_record(request, patient_id=None, record_id=None):
                 medical_record.patient = patient
                 medical_record.doctor = doctor
                 medical_record.save()
+
+                # Handle referral if specified
+                referred_to = form.cleaned_data.get('referred_to')
+                department_sent_to = form.cleaned_data.get('department_sent_to')
+                if referred_to and department_sent_to:
+                    PatientReferral.objects.create(
+                        patient=patient,
+                        referring_doctor=doctor,
+                        referred_doctor=referred_to,
+                        reason=f"Referral based on medical record: {medical_record.diagnosis}",
+                        department=department_sent_to,
+                        status='pending'
+                    )
+
                 messages.success(request, f"Medical record {'updated' if is_edit else 'added'} successfully!")
                 return redirect("doctor_dashboard")
             except Exception as e:
@@ -339,16 +334,15 @@ def add_medical_record(request, patient_id=None, record_id=None):
         else:
             messages.error(request, "Please correct the errors below.")
     else:
-        form = MedicalRecordForm(
-            instance=record,
-            initial={"patient": patient, "doctor": doctor} if not record else None,
-        )
+        initial_data = {'patient': patient, 'doctor': doctor} if patient else {}
+        form = MedicalRecordForm(instance=record, initial=initial_data)
 
-    return render(request, "add_medical_record.html", {
+    context = {
         "form": form,
         "patient": patient,
         "is_edit": is_edit,
-    })
+    }
+    return render(request, "add_medical_record.html", context)
 
 
 @login_required(login_url="login")
@@ -883,12 +877,17 @@ def view_incoming_referrals(request):
     treated_referrals = incoming_referrals.filter(status="accepted", is_treated=True)
     rejected_referrals = incoming_referrals.filter(status="rejected")
 
+    # Attach medical records (optional enhancement)
+    for referral in list(pending_referrals) + list(accepted_referrals) + list(treated_referrals):
+        referral.medical_record = MedicalRecord.objects.filter(patient=referral.patient).last()
+
     return render(request, "view_incoming_referrals.html", {
         "pending_referrals": pending_referrals,
         "accepted_referrals": accepted_referrals,
         "treated_referrals": treated_referrals,
         "rejected_referrals": rejected_referrals,
     })
+
 
 
 @login_required(login_url="login")
@@ -1414,3 +1413,29 @@ def generate_system_report(request):
     except Exception as e:
         messages.error(request, f"Error generating report: {str(e)}")
         return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/admin-dashboard/"))
+    
+def get_departments(request):
+    departments = Doctor.SPECIALTY_CHOICES
+    return JsonResponse({'departments': list(departments)})
+
+
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+from .models import PatientReferral, MedicalRecord
+
+def get_treatment_details(request):
+    referral_id = request.GET.get("referral_id")
+    try:
+        referral = PatientReferral.objects.get(id=referral_id)
+        records = MedicalRecord.objects.filter(patient=referral.patient).order_by("-created_at")
+        html = render_to_string("partials/treatment_modal_content.html", {
+            "records": records,
+            "referral": referral,
+        })
+        title = f"Treatment Details for {referral.patient.get_full_name() if hasattr(referral.patient, 'get_full_name') else referral.patient.username}"
+        return JsonResponse({"html": html, "title": title})
+    except PatientReferral.DoesNotExist:
+        return JsonResponse({"html": "<p>Referral not found.</p>", "title": "Error"})
+    
+    
+    

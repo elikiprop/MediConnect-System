@@ -131,42 +131,9 @@
                                 <td>{{ referral.reason }}</td>
                                 <td>{{ referral.medical_records.first.created_at|date:"M d, Y" }}</td>
                                 <td>
-                                    <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#treatmentModal{{ referral.id }}">
+                                    <button type="button" class="btn btn-info btn-sm view-treatment-btn" data-referral-id="{{ referral.id }}">
                                         View Treatment Details
                                     </button>
-                                   
-                                    
-                                    <!-- Modal for Treatment Details -->
-                                    <div class="modal fade" id="treatmentModal{{ referral.id }}" tabindex="-1" role="dialog" aria-labelledby="treatmentModalLabel{{ referral.id }}" aria-hidden="true">
-                                        <div class="modal-dialog modal-lg" role="document">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title" id="treatmentModalLabel{{ referral.id }}">Treatment Details for {{ referral.patient.get_full_name|default:referral.patient.username }}</h5>
-                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                        <span aria-hidden="true">&times;</span>
-                                                    </button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    {% for record in referral.medical_records.all %}
-                                                    <div class="card mb-3">
-                                                        <div class="card-header">
-                                                            <h6>Treatment on {{ record.created_at|date:"M d, Y" }}</h6>
-                                                        </div>
-                                                        <div class="card-body">
-                                                            <h6>Diagnosis:</h6>
-                                                            <p>{{ record.diagnosis }}</p>
-                                                            <h6>Medication/Treatment:</h6>
-                                                            <p>{{ record.medication }}</p>
-                                                        </div>
-                                                    </div>
-                                                    {% endfor %}
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -215,4 +182,53 @@
         </div>
     </div>
 </div>
+
+<!-- Universal Modal for Treatment Details -->
+<div class="modal fade" id="treatmentModal" tabindex="-1" role="dialog" aria-labelledby="treatmentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="treatmentModalLabel">Treatment Details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" id="treatmentModalBody">
+                Loading...
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- jQuery (required) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Bootstrap JS (if needed for modals) -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $(".view-treatment-btn").click(function () {
+            var referralId = $(this).data("referral-id");
+    
+            // Show loading state before AJAX returns
+            $("#treatmentModalBody").html("<p>Loading treatment details...</p>");
+            $("#treatmentModalLabel").text("Treatment Details");
+    
+            $.ajax({
+                url: "{% url 'get_treatment_details' %}",
+                data: { referral_id: referralId },
+                success: function (data) {
+                    $("#treatmentModalLabel").text(data.title);
+                    $("#treatmentModalBody").html(data.html);
+                    $("#treatmentModal").modal("show");
+                },
+                error: function () {
+                    $("#treatmentModalBody").html("<p>Error loading treatment details.</p>");
+                    $("#treatmentModal").modal("show");
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}

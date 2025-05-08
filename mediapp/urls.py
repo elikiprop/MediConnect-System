@@ -25,7 +25,7 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     path('logout/', views.user_logout, name='logout'),
     path('notify-doctor/<int:appointment_id>/<str:call_type>/', views.notify_doctor, name='notify_doctor'),
-    path('add-medical-record/', views.add_medical_record, name='add_medical_record'),  # Updated
+    path('add-medical-record/(?P<patient_id>[0-9]+)/', views.add_medical_record, name='add_medical_record'),    
     path('generate-pdf/<int:record_id>/', views.generate_pdf, name='generate_pdf'),
     path('start-video-call/', views.start_video_call, name='start_video_call'),
     path('start-voice-call/', views.start_voice_call, name='start_voice_call'),
@@ -49,13 +49,15 @@ urlpatterns = [
     path('add-lab-result/', views.add_lab_result, name='add_lab_result'),  # Added
     
     
-    
-    
+    path('ajax/get-departments/', views.get_departments, name='get_departments'),
+
+    path('add-medical-record/', views.add_medical_record, name='add_medical_record'),
     path('add-user/', views.add_user, name='add_user'),
     path('edit-user/', views.edit_user, name='edit_user'),
     path('delete-user/<int:user_id>/', views.delete_user, name='delete_user'),
     path('get-user/<int:user_id>/', views.get_user, name='get_user'),
     path('generate-system-report/', views.generate_system_report, name='generate_system_report'),
     path('get-all-appointments/', views.get_all_appointments, name='get_all_appointments'),
+    path("ajax/get-treatment-details/", views.get_treatment_details, name="get_treatment_details"),
 
 ]

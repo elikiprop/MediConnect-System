@@ -1,0 +1,19 @@
+{% if records %}
+    {% for record in records %}
+        <div class="card mb-3">
+            <div class="card-header">
+                <h6>Treatment on {{ record.created_at|date:"M d, Y" }}</h6>
+            </div>
+            <div class="card-body">
+                <h6>Diagnosis:</h6>
+                <p>{{ record.diagnosis }}</p>
+                <h6>Medication/Treatment:</h6>
+                <p>{{ record.medication }}</p>
+                <h6>Doctor:</h6>
+                <p>{{ record.doctor.user.get_full_name }}</p>
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+    <p>No treatment records found.</p>
+{% endif %}

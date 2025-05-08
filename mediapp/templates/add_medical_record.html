@@ -1,73 +1,61 @@
-{% extends "base.html" %}
-
-{% block title %}{% if is_edit %}Edit{% else %}Add{% endif %} Medical Record{% endblock %}
+{% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
-    <div class="card shadow p-4" style="width: 50%; max-width: 600px;">
-        <h2 class="text-center mb-4">
-            {% if is_edit %}Edit{% else %}Add{% endif %} Medical Record for {{ patient.get_full_name|default:patient.username }}
-        </h2>
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4>{% if is_edit %}Edit{% else %}Add{% endif %} Medical Record for {{ patient.get_full_name }}</h4>
                 </div>
-            {% endfor %}
-        {% endif %}
-        <form method="post">
-            {% csrf_token %}
-            <!-- Patient (Read-only) -->
-            <div class="mb-3">
-                <label class="form-label">Patient</label>
-                <input type="text" class="form-control" value="{{ patient.get_full_name|default:patient.username }}" readonly>
-                {{ form.patient.as_hidden }}
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {# Include patient as a hidden field #}
+                        <input type="hidden" name="patient" value="{{ patient.id }}">
+                        
+                        <div class="form-group mb-3">
+                            <label for="id_diagnosis">Diagnosis:</label>
+                            {{ form.diagnosis }}
+                            {% if form.diagnosis.errors %}
+                                <div class="text-danger">{{ form.diagnosis.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="id_medication">Medication:</label>
+                            {{ form.medication }}
+                            {% if form.medication.errors %}
+                                <div class="text-danger">{{ form.medication.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="id_referred_to">Refer to Doctor (Optional):</label>
+                            {{ form.referred_to }}
+                            {% if form.referred_to.errors %}
+                                <div class="text-danger">{{ form.referred_to.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <label for="id_department_sent_to">Department (Required if referring):</label>
+                            {{ form.department_sent_to }}
+                            {% if form.department_sent_to.errors %}
+                                <div class="text-danger">{{ form.department_sent_to.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'doctor_dashboard' %}" class="btn btn-secondary me-md-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Save Record</button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <!-- Doctor (Read-only) -->
-            <div class="mb-3">
-                <label class="form-label">Doctor</label>
-                <input type="text" class="form-control" value="{{ request.user.get_full_name|default:request.user.username }}" readonly>
-                {{ form.doctor.as_hidden }}
-            </div>
-            <!-- Diagnosis -->
-            <div class="mb-3">
-                <label class="form-label" for="{{ form.diagnosis.id_for_label }}">Diagnosis</label>
-                {{ form.diagnosis }}
-                {% if form.diagnosis.errors %}
-                    <div class="text-danger">{{ form.diagnosis.errors }}</div>
-                {% endif %}
-            </div>
-            <!-- Medication -->
-            <div class="mb-3">
-                <label class="form-label" for="{{ form.medication.id_for_label }}">Medication</label>
-                {{ form.medication }}
-                {% if form.medication.errors %}
-                    <div class="text-danger">{{ form.medication.errors }}</div>
-                {% endif %}
-            </div>
-            <!-- Referred To -->
-            <div class="mb-3">
-                <label class="form-label" for="{{ form.referred_to.id_for_label }}">Referred To (Optional)</label>
-                {{ form.referred_to }}
-                {% if form.referred_to.errors %}
-                    <div class="text-danger">{{ form.referred_to.errors }}</div>
-                {% endif %}
-            </div>
-            <!-- Department Sent To -->
-            <div class="mb-3">
-                <label class="form-label" for="{{ form.department_sent_to.id_for_label }}">Department Sent To (Optional)</label>
-                {{ form.department_sent_to }}
-                {% if form.department_sent_to.errors %}
-                    <div class="text-danger">{{ form.department_sent_to.errors }}</div>
-                {% endif %}
-            </div>
-            <!-- Buttons -->
-            <div class="d-flex justify-content-between">
-                <a href="{% url 'doctor_dashboard' %}" class="btn btn-secondary">← Back to Doctor's Dashboard</a>
-                <button type="submit" class="btn btn-primary">Save Record</button>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 {% endblock %}
