@@ -1374,6 +1374,14 @@ def get_user(request, user_id):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
+from io import BytesIO
+import pdfkit
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from datetime import datetime
+from django.contrib import messages
+from django.http import HttpResponseRedirect
+import sys
 @login_required(login_url="login")
 @user_passes_test(is_admin)
 def generate_system_report(request):
@@ -1382,11 +1390,12 @@ def generate_system_report(request):
         return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/admin-dashboard/"))
 
     try:
-        total_users = CustomUser.objects.count()  # Changed from User
-        total_patients = CustomUser.objects.filter(role="patient").count()  # Changed from Patient
+        # gather your data
+        total_users = CustomUser.objects.count()
+        total_patients = CustomUser.objects.filter(role="patient").count()
         total_doctors = Doctor.objects.count()
         total_appointments = Appointment.objects.count()
-        total_referrals = PatientReferral.objects.count()  # Changed to PatientReferral
+        total_referrals = PatientReferral.objects.count()
         pending_referrals = PatientReferral.objects.filter(status="pending").count()
 
         context = {
@@ -1400,19 +1409,23 @@ def generate_system_report(request):
         }
 
         html_string = render_to_string("system_report.html", context)
-        response = HttpResponse(content_type="application/pdf")
-        response["Content-Disposition"] = 'attachment; filename="system_report.pdf"'
+        config = pdfkit.configuration(wkhtmltopdf=r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe")
 
-        config = (
-            pdfkit.configuration(wkhtmltopdf="C:\\Program Files\\wkhtmltopdf\\bin\\wkhtmltopdf.exe")
-            if "win" in sys.platform
-            else None
+        # ✅ Use False to get PDF as byte string
+        pdf = pdfkit.from_string(html_string, False, configuration=config)
+
+        return HttpResponse(
+            pdf,
+            content_type="application/pdf",
+            headers={"Content-Disposition": 'attachment; filename="system_report.pdf"'}
         )
-        pdfkit.from_string(html_string, response, configuration=config)
-        return response
+
     except Exception as e:
         messages.error(request, f"Error generating report: {str(e)}")
         return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/admin-dashboard/"))
+
+
+
     
 def get_departments(request):
     departments = Doctor.SPECIALTY_CHOICES

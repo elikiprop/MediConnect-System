@@ -1,61 +1,132 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>MediConnect System Report</title>
+    <meta charset="UTF-8">
+    <title>MediConnect - System Report</title>
     <style>
         body {
+            margin: 0;
+            padding: 20px;
             font-family: Arial, sans-serif;
-            line-height: 1.6;
-            margin: 20px;
+            background-color: #FAFAFA;
             color: #333;
         }
+
         .container {
             max-width: 800px;
-            margin: 0 auto;
-            border: 1px solid #ddd;
-            padding: 20px;
+            margin: auto;
+            background: #fff;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            border-top: 6px solid #6A1B9A;
         }
+
         .header {
             text-align: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #007bff;
+            background-color: #6A1B9A;
+            padding: 20px;
+            color: white;
+            border-radius: 8px;
         }
+
         .header h1 {
-            color: #007bff;
             margin: 0;
+            font-size: 32px;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
         }
-        .stats {
-            margin-bottom: 20px;
+
+        .header p {
+            margin: 5px 0 0;
+            font-size: 14px;
+            opacity: 0.9;
         }
-        .stats p {
-            margin: 5px 0;
+
+        .mission {
+            text-align: center;
+            background-color: #EDE7F6;
+            border-left: 5px solid #5E35B1;
+            padding: 10px;
+            margin: 20px 0;
+            font-style: italic;
+            color: #4A148C;
+            border-radius: 6px;
+        }
+
+        .section {
+            margin: 25px 0;
+            padding: 15px 20px;
+            background-color: #F3E5F5;
+            border-left: 5px solid #AB47BC;
+            border-radius: 6px;
+        }
+
+        .section h2 {
+            margin: 0 0 10px;
+            font-size: 20px;
+            color: #6A1B9A;
+            border-bottom: 1px solid #CE93D8;
+            padding-bottom: 5px;
+        }
+
+        .stat {
             font-size: 16px;
+            margin: 8px 0;
         }
+
+        .stat strong {
+            color: #4A148C;
+        }
+
         .footer {
             text-align: center;
-            margin-top: 20px;
-            font-size: 14px;
+            font-size: 13px;
             color: #777;
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #DDD;
+        }
+
+        .contact {
+            text-align: center;
+            font-size: 14px;
+            margin-top: 20px;
+            color: #01579B;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>MediConnect System Report</h1>
-            <p>Generated on {{ report_date }}</p>
+            <h1>MediConnect Hospital System</h1>
+            <p>System Report Generated on {{ report_date }}</p>
         </div>
-        <div class="stats">
-            <h2>System Statistics</h2>
-            <p><strong>Total Users:</strong> {{ total_users }}</p>
-            <p><strong>Total Patients:</strong> {{ total_patients }}</p>
-            <p><strong>Total Doctors:</strong> {{ total_doctors }}</p>
-            <p><strong>Total Appointments:</strong> {{ total_appointments }}</p>
-            <p><strong>Total Referrals:</strong> {{ total_referrals }}</p>
-            <p><strong>Pending Referrals:</strong> {{ pending_referrals }}</p>
+
+        <div class="mission">
+            <p>"Empowering Health, Inspiring Hope."</p>
         </div>
+
+        <div class="section">
+            <h2>System Statistics Overview</h2>
+            <p class="stat"><strong>Total Users:</strong> {{ total_users }}</p>
+            <p class="stat"><strong>Total Patients:</strong> {{ total_patients }}</p>
+            <p class="stat"><strong>Total Doctors:</strong> {{ total_doctors }}</p>
+            <p class="stat"><strong>Total Appointments:</strong> {{ total_appointments }}</p>
+            <p class="stat"><strong>Total Referrals:</strong> {{ total_referrals }}</p>
+            <p class="stat"><strong>Pending Referrals:</strong> {{ pending_referrals }}</p>
+        </div>
+
+        <div class="contact">
+            <p><strong>MediConnect Hospital</strong></p>
+            <p>254 Eldoret Street, Eldoret City, HC 54321</p>
+            <p>Phone: (+254) 717677588 | Email: elikiprop@gmail.com</p>
+            <p>Website: www.mediconnecthospital.org</p>
+        </div>
+
         <div class="footer">
-            <p>MediConnect System © {{ report_date|date:"Y" }}</p>
+            <p>MediConnect Hospital © {{ report_date|date:"Y" }}</p>
+            <p>Committed to Excellence in Healthcare</p>
         </div>
     </div>
 </body>
