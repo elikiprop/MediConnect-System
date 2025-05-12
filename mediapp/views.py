@@ -13,6 +13,7 @@ from django.template.loader import render_to_string
 import json
 import pdfkit
 import sys
+from io import BytesIO
 
 from .forms import (
     AppointmentForm,
@@ -1374,14 +1375,7 @@ def get_user(request, user_id):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
 
-from io import BytesIO
-import pdfkit
-from django.http import HttpResponse
-from django.template.loader import render_to_string
-from datetime import datetime
-from django.contrib import messages
-from django.http import HttpResponseRedirect
-import sys
+
 @login_required(login_url="login")
 @user_passes_test(is_admin)
 def generate_system_report(request):
@@ -1423,8 +1417,6 @@ def generate_system_report(request):
     except Exception as e:
         messages.error(request, f"Error generating report: {str(e)}")
         return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/admin-dashboard/"))
-
-
 
     
 def get_departments(request):
