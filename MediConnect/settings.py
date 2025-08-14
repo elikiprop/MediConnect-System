@@ -138,3 +138,21 @@ PDFKIT_CONFIG = pdfkit.configuration(wkhtmltopdf="C:/Users/Eli Kiprop/Documents/
 
 # Use the CustomUser model from mediapp
 AUTH_USER_MODEL = 'mediapp.CustomUser'
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/5.1/howto/static-files/
+
+STATIC_URL = 'static/'
+
+# Added for development and production
+from pathlib import Path
+import os
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),  # global static folder
+]
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # where collectstatic will copy files
+
+# Media files (user uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

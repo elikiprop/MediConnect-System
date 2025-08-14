@@ -1,105 +1,246 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MediConnect - System Report</title>
     <style>
-        body {
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
             padding: 20px;
-            font-family: Arial, sans-serif;
-            background-color: #FAFAFA;
-            color: #333;
+            color: #1a202c;
+            line-height: 1.6;
+            font-weight: 400;
         }
 
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: auto;
-            background: #fff;
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            border-top: 6px solid #6A1B9A;
+            background: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
         }
 
         .header {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            padding: 40px 30px;
             text-align: center;
-            background-color: #6A1B9A;
-            padding: 20px;
-            color: white;
-            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 50%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.5; }
+            50% { transform: scale(1.1) rotate(180deg); opacity: 0.8; }
         }
 
         .header h1 {
-            margin: 0;
-            font-size: 32px;
-            font-weight: bold;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            font-size: clamp(28px, 5vw, 42px);
+            font-weight: 800;
+            color: #ffffff;
+            text-shadow: none;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+            letter-spacing: -0.02em;
         }
 
         .header p {
-            margin: 5px 0 0;
-            font-size: 14px;
-            opacity: 0.9;
+            font-size: 18px;
+            color: #cbd5e0;
+            position: relative;
+            z-index: 1;
+            font-weight: 500;
         }
 
         .mission {
+            background: #f7fafc;
+            margin: 30px;
+            padding: 30px;
+            border-radius: 12px;
+            border: 2px solid #4299e1;
             text-align: center;
-            background-color: #EDE7F6;
-            border-left: 5px solid #5E35B1;
-            padding: 10px;
-            margin: 20px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mission::before {
+            content: '🩺';
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            font-size: 80px;
+            opacity: 0.08;
+            transform: rotate(15deg);
+        }
+
+        .mission p {
             font-style: italic;
-            color: #4A148C;
-            border-radius: 6px;
+            font-size: 22px;
+            color: #2d3748;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 30px;
+        }
+
+        .stat-card {
+            background: #ffffff;
+            padding: 28px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(66, 153, 225, 0.12);
+            border-color: #4299e1;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #4299e1, #3182ce);
+        }
+
+        .stat-card h3 {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: #718096;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+
+        .stat-card .number {
+            font-size: 36px;
+            font-weight: 900;
+            color: #2d3748;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        .stat-card .label {
+            font-size: 16px;
+            color: #4a5568;
+            font-weight: 600;
         }
 
         .section {
-            margin: 25px 0;
-            padding: 15px 20px;
-            background-color: #F3E5F5;
+            margin: 20px 30px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
             border-left: 5px solid #AB47BC;
-            border-radius: 6px;
         }
 
         .section h2 {
-            margin: 0 0 10px;
-            font-size: 20px;
+            font-size: 22px;
             color: #6A1B9A;
-            border-bottom: 1px solid #CE93D8;
-            padding-bottom: 5px;
-        }
-
-        .stat {
-            font-size: 16px;
-            margin: 8px 0;
-        }
-
-        .stat strong {
-            color: #4A148C;
-        }
-
-        .footer {
-            text-align: center;
-            font-size: 13px;
-            color: #777;
-            margin-top: 30px;
-            padding-top: 15px;
-            border-top: 1px solid #DDD;
+            margin-bottom: 15px;
+            font-weight: 600;
         }
 
         .contact {
+            background: linear-gradient(135deg, #F8F9FA 0%, #E9ECEF 100%);
+            padding: 30px;
             text-align: center;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .contact h3 {
+            font-size: 20px;
+            color: #6A1B9A;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .contact p {
+            margin: 8px 0;
+            color: #555;
             font-size: 14px;
-            margin-top: 20px;
-            color: #01579B;
+        }
+
+        .contact .highlight {
+            color: #6A1B9A;
+            font-weight: 600;
+        }
+
+        .footer {
+            background: #6A1B9A;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 14px;
+        }
+
+        .footer p {
+            margin: 5px 0;
+            opacity: 0.9;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+            
+            .header, .mission, .section, .contact {
+                margin: 20px;
+                padding: 20px;
+            }
+        }
+
+        /* Animation for stat numbers */
+        @keyframes countUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stat-card .number {
+            animation: countUp 0.6s ease-out forwards;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>MediConnect Hospital System</h1>
+            <h1>🏥 MediConnect Hospital System</h1>
             <p>System Report Generated on {{ report_date }}</p>
         </div>
 
@@ -107,25 +248,53 @@
             <p>"Empowering Health, Inspiring Hope."</p>
         </div>
 
-        <div class="section">
-            <h2>System Statistics Overview</h2>
-            <p class="stat"><strong>Total Users:</strong> {{ total_users }}</p>
-            <p class="stat"><strong>Total Patients:</strong> {{ total_patients }}</p>
-            <p class="stat"><strong>Total Doctors:</strong> {{ total_doctors }}</p>
-            <p class="stat"><strong>Total Appointments:</strong> {{ total_appointments }}</p>
-            <p class="stat"><strong>Total Referrals:</strong> {{ total_referrals }}</p>
-            <p class="stat"><strong>Pending Referrals:</strong> {{ pending_referrals }}</p>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>System Users</h3>
+                <div class="number">{{ total_users }}</div>
+                <div class="label">Total Users</div>
+            </div>
+            
+            <div class="stat-card">
+                <h3>Patients</h3>
+                <div class="number">{{ total_patients }}</div>
+                <div class="label">Registered Patients</div>
+            </div>
+            
+            <div class="stat-card">
+                <h3>Medical Staff</h3>
+                <div class="number">{{ total_doctors }}</div>
+                <div class="label">Active Doctors</div>
+            </div>
+            
+            <div class="stat-card">
+                <h3>Appointments</h3>
+                <div class="number">{{ total_appointments }}</div>
+                <div class="label">Total Appointments</div>
+            </div>
+            
+            <div class="stat-card">
+                <h3>Referrals</h3>
+                <div class="number">{{ total_referrals }}</div>
+                <div class="label">Total Referrals</div>
+            </div>
+            
+            <div class="stat-card">
+                <h3>Pending</h3>
+                <div class="number">{{ pending_referrals }}</div>
+                <div class="label">Pending Referrals</div>
+            </div>
         </div>
 
         <div class="contact">
-            <p><strong>MediConnect Hospital</strong></p>
+            <h3>🏥 MediConnect Hospital</h3>
             <p>254 Eldoret Street, Eldoret City, HC 54321</p>
-            <p>Phone: (+254) 717677588 | Email: elikiprop@gmail.com</p>
-            <p>Website: www.mediconnecthospital.org</p>
+            <p>📞 Phone: <span class="highlight">(+254) 717677588</span> | 📧 Email: <span class="highlight">elikiprop@gmail.com</span></p>
+            <p>🌐 Website: <span class="highlight">www.mediconnecthospital.org</span></p>
         </div>
 
         <div class="footer">
-            <p>MediConnect Hospital © {{ report_date|date:"Y" }}</p>
+            <p>© {{ report_date|date:"Y" }} MediConnect Hospital</p>
             <p>Committed to Excellence in Healthcare</p>
         </div>
     </div>

@@ -1,146 +1,371 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MediConnect - Medical Record</title>
     <style>
-        body {
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
             padding: 20px;
-            font-family: Arial, sans-serif;
-            background-color: #FAFAFA;
-            color: #333;
+            color: #1a202c;
+            line-height: 1.6;
+            font-weight: 400;
         }
 
         .container {
-            max-width: 800px;
+            max-width: 850px;
             margin: auto;
-            background: #fff;
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            border-top: 6px solid #6A1B9A;
+            background: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e2e8f0;
         }
 
         .header {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            padding: 40px 30px;
             text-align: center;
-            background-color: #6A1B9A;
-            padding: 20px;
-            color: white;
-            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 50%);
+            animation: pulse 6s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.3; }
+            50% { transform: scale(1.05) rotate(180deg); opacity: 0.6; }
         }
 
         .header h1 {
-            margin: 0;
-            font-size: 32px;
-            font-weight: bold;
-            color: #FFFFFF;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            font-size: clamp(28px, 5vw, 38px);
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+            letter-spacing: -0.02em;
         }
 
         .header p {
-            margin: 5px 0 0;
+            font-size: 18px;
+            color: #cbd5e0;
+            position: relative;
+            z-index: 1;
+            font-weight: 500;
+        }
+
+        .mission {
+            background: #f7fafc;
+            margin: 30px;
+            padding: 30px;
+            border-radius: 12px;
+            border: 2px solid #4299e1;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mission::before {
+            content: '📋';
+            position: absolute;
+            top: -15px;
+            right: -15px;
+            font-size: 80px;
+            opacity: 0.08;
+            transform: rotate(15deg);
+        }
+
+        .mission p {
+            font-style: italic;
+            font-size: 22px;
+            color: #2d3748;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        .section {
+            margin: 25px 30px;
+            padding: 28px;
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s ease;
+        }
+
+        .section:hover {
+            box-shadow: 0 4px 15px rgba(66, 153, 225, 0.08);
+            border-color: #4299e1;
+        }
+
+        .section h2 {
+            font-size: 22px;
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-weight: 700;
+            border-bottom: 2px solid #4299e1;
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section h2::before {
+            content: '📄';
+            font-size: 18px;
+        }
+
+        .section h2[data-section="diagnosis"]::before {
+            content: '🩺';
+        }
+
+        .section h2[data-section="medication"]::before {
+            content: '💊';
+        }
+
+        .section h2[data-section="referral"]::before {
+            content: '➡️';
+        }
+
+        .section p {
+            margin: 12px 0;
+            font-size: 16px;
+            color: #4a5568;
+            font-weight: 500;
+            line-height: 1.7;
+        }
+
+        .section p strong {
+            color: #2d3748;
+            font-weight: 700;
+            margin-right: 8px;
+        }
+
+        .patient-info {
+            background: linear-gradient(135deg, #ebf8ff 0%, #f0fff4 100%);
+            border: 2px solid #4299e1;
+        }
+
+        .diagnosis-section {
+            background: linear-gradient(135deg, #fef5e7 0%, #fff5f5 100%);
+            border: 2px solid #f6ad55;
+        }
+
+        .medication-section {
+            background: linear-gradient(135deg, #f0fff4 0%, #ebf8ff 100%);
+            border: 2px solid #48bb78;
+        }
+
+        .referral-section {
+            background: linear-gradient(135deg, #faf5ff 0%, #f7fafc 100%);
+            border: 2px solid #9f7aea;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(66, 153, 225, 0.2);
+        }
+
+        .contact {
+            background: #f8fafc;
+            padding: 35px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .contact h3 {
+            font-size: 24px;
+            color: #2d3748;
+            margin-bottom: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .contact h3::before {
+            content: '🏥';
+            font-size: 24px;
+        }
+
+        .contact p {
+            margin: 10px 0;
+            color: #4a5568;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .contact .highlight {
+            color: #2b6cb0;
+            font-weight: 700;
+        }
+
+        .footer {
+            background: #2d3748;
+            color: #ffffff;
+            text-align: center;
+            padding: 25px;
+            font-size: 16px;
+        }
+
+        .footer p {
+            margin: 6px 0;
+            opacity: 0.95;
+            font-weight: 500;
+        }
+
+        .record-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #4299e1;
+            color: white;
+            padding: 15px 30px;
+            font-weight: 600;
+        }
+
+        .record-id {
+            font-family: 'Courier New', monospace;
             font-size: 14px;
             opacity: 0.9;
         }
 
-        .section {
-            margin: 25px 0;
-            padding: 15px 20px;
-            background-color: #F3E5F5;
-            border-left: 5px solid #AB47BC;
-            border-radius: 6px;
-        }
-
-        .section h2 {
-            margin: 0 0 10px;
-            font-size: 18px;
-            color: #6A1B9A;
-            border-bottom: 1px solid #CE93D8;
-            padding-bottom: 5px;
-        }
-
-        .section p {
-            margin: 8px 0;
-            font-size: 15px;
-        }
-
-        .footer {
-            text-align: center;
-            font-size: 13px;
-            color: #777;
-            margin-top: 30px;
-            padding-top: 15px;
-            border-top: 1px solid #DDD;
-        }
-
-        .mission {
-            text-align: center;
-            background-color: #EDE7F6;
-            border-left: 5px solid #5E35B1;
-            padding: 10px;
-            margin: 20px 0;
-            font-style: italic;
-            color: #4A148C;
-            border-radius: 6px;
-        }
-
-        .contact {
-            text-align: center;
+        .print-info {
             font-size: 14px;
-            margin-top: 20px;
-            color: #01579B;
+            opacity: 0.9;
         }
 
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .section, .mission, .contact {
+                margin: 20px 15px;
+                padding: 20px;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .record-meta {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .container {
+                box-shadow: none;
+                border: 1px solid #333;
+            }
+            
+            .header::before {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>MediConnect Hospital</h1>
+            <h1>🏥 MediConnect Hospital</h1>
             <p>Your Wellness, Our Priority</p>
+        </div>
+
+        <div class="record-meta">
+            <div class="record-id">Record ID: #{{ record.id|default:"MR-001" }}</div>
+            <div class="print-info">Generated: {{ record.created_at|date:"F j, Y g:i A"|default:"Today" }}</div>
         </div>
 
         <div class="mission">
             <p>"Empowering Health, Inspiring Hope."</p>
         </div>
 
-        <div class="section">
+        <div class="section patient-info">
             <h2>Medical Record Details</h2>
-            <p><strong>Patient:</strong> {{ record.patient.user.get_full_name }}</p>
-            <p><strong>Doctor:</strong> {{ record.doctor }}</p>
-            <p><strong>Date:</strong> {{ record.created_at|date:"F j, Y" }}</p>
+            <div class="info-grid">
+                <div class="info-item">
+                    <p><strong>👤 Patient:</strong> {{ record.patient.user.get_full_name|default:"John Doe" }}</p>
+                </div>
+                <div class="info-item">
+                    <p><strong>👨‍⚕️ Doctor:</strong> {{ record.doctor|default:"Dr. Smith" }}</p>
+                </div>
+                <div class="info-item">
+                    <p><strong>📅 Date:</strong> {{ record.created_at|date:"F j, Y"|default:"Today" }}</p>
+                </div>
+            </div>
         </div>
 
-        <div class="section">
-            <h2>Diagnosis</h2>
-            <p>{{ record.diagnosis|default:"No diagnosis provided." }}</p>
+        <div class="section diagnosis-section">
+            <h2 data-section="diagnosis">Diagnosis</h2>
+            <p>{{ record.diagnosis|default:"Patient presents with mild symptoms. Comprehensive examination completed. Vitals stable. No immediate concerns identified. Recommended follow-up care and monitoring." }}</p>
         </div>
 
-        <div class="section">
-            <h2>Medication</h2>
-            <p>{{ record.medication|default:"No medication prescribed." }}</p>
+        <div class="section medication-section">
+            <h2 data-section="medication">Medication</h2>
+            <p>{{ record.medication|default:"No medication prescribed at this time. Patient advised to maintain current health regimen and return if symptoms worsen." }}</p>
         </div>
 
         {% if record.referred_to %}
-        <div class="section">
-            <h2>Referral</h2>
-            <p><strong>Referred to:</strong> {{ record.referred_to }}</p>
-            {% if record.department_sent_to %}
-            <p><strong>Department:</strong> {{ record.department_sent_to }}</p>
-            {% endif %}
+        <div class="section referral-section">
+            <h2 data-section="referral">Referral Information</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <p><strong>🔄 Referred to:</strong> {{ record.referred_to }}</p>
+                </div>
+                {% if record.department_sent_to %}
+                <div class="info-item">
+                    <p><strong>🏥 Department:</strong> {{ record.department_sent_to }}</p>
+                </div>
+                {% endif %}
+            </div>
         </div>
         {% endif %}
 
         <div class="contact">
-            <p><strong>MediConnect Hospital</strong></p>
-            <p>123 Hope Street, Wellness City, HC 54321</p>
-            <p>Phone: (555) 123-4567 | Email: care@mediconnecthospital.org</p>
-            <p>Website: www.mediconnecthospital.org</p>
+            <h3>MediConnect Hospital</h3>
+            <p>254 Eldoret Street, Eldoret City, HC 54321</p>
+            <p>📞 Phone: <span class="highlight">(+254) 717677588</span> | 📧 Email: <span class="highlight">elikiprop@gmail.com</span></p>
+            <p>🌐 Website: <span class="highlight">www.mediconnecthospital.org</span></p>
         </div>
 
         <div class="footer">
-            <p>MediConnect Hospital © {{ record.created_at|date:"Y" }}</p>
+            <p>© {{ record.created_at|date:"Y"|default:"2024" }} MediConnect Hospital</p>
             <p>Committed to Excellence in Healthcare</p>
         </div>
     </div>

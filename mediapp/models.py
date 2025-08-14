@@ -172,8 +172,11 @@ class MedicalRecord(models.Model):
     )
 
     def clean(self):
+    # Only validate patient role if patient is set
+     if self.patient_id:  # ✅ safer than accessing self.patient directly
         if self.patient.role != 'patient':
-            raise ValidationError("Patient must have role 'patient'.")
+            raise ValidationError("The selected user is not a patient.")
+
 
     def __str__(self):
         return f"Medical Record for {self.patient} by Dr. {self.doctor} ({self.created_at.date()})"

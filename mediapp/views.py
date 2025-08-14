@@ -101,7 +101,7 @@ def contact(request):
                 f"New Contact Form Submission: {subject}",
                 f"Name: {name}\nEmail: {email}\n\nMessage:\n{message}",
                 email,
-                ["elikiprop42@gmail.com"],
+                ["elikiprop42@gmail.com", email],
                 fail_silently=False,
             )
             messages.success(request, "Your message has been sent successfully!")
@@ -124,8 +124,8 @@ def register(request):
     return render(request, "register.html", {"form": form})
 
 
-
-# Login view
+# 
+# Login view   
 def user_login(request):
     if request.method == "POST":
         form = LoginForm(request, data=request.POST)
@@ -193,6 +193,8 @@ def doctor_dashboard(request):
 
     # Get data
     records = MedicalRecord.objects.filter(doctor=doctor).order_by("-created_at")
+    # records = MedicalRecord.objects.order_by("-created_at")
+
     upcoming_appointments = Appointment.objects.filter(
         doctor=doctor, date__gte=date.today()
     ).order_by("date", "time")
@@ -219,10 +221,9 @@ def doctor_dashboard(request):
     appointments = Appointment.objects.filter(doctor=doctor)
 
     # Calculate total patients and appointments
-    total_patients = CustomUser.objects.filter(
-        role="patient",
-        doctor=doctor
-    ).count()
+    total_patients = Appointment.objects.filter(
+    doctor=doctor
+).values('patient').distinct().count()
     total_appointments = Appointment.objects.filter(
         doctor=doctor
     ).count()
@@ -274,32 +275,41 @@ def doctor_dashboard(request):
 # Medical Record Views
 @login_required(login_url="login")
 def add_medical_record(request, patient_id=None, record_id=None):
+    print("[DEBUG] add_medical_record called")
+    print(f"[DEBUG] URL patient_id: {patient_id}, record_id: {record_id}")
+
     if request.user.role != "doctor":
         messages.error(request, "Only doctors can add or edit medical records.")
         return redirect("home")
 
     try:
         doctor = Doctor.objects.get(user=request.user)
+        print(f"[DEBUG] Doctor found: {doctor}")
     except Doctor.DoesNotExist:
         messages.error(request, "You do not have a doctor profile.")
         return redirect("home")
 
     # Determine patient_id from URL, GET, or POST
     patient_id = patient_id or request.GET.get("patient_id") or request.POST.get("patient_id")
+    print(f"[DEBUG] Final patient_id: {patient_id}")
+
+    patient = None
 
     if record_id:  # Editing existing record
         record = get_object_or_404(MedicalRecord, id=record_id, doctor=doctor)
         patient = record.patient
+        print(f"[DEBUG] Editing existing record: {record}, Patient: {patient}")
         is_edit = True
     else:  # Adding new record
         if patient_id:
             try:
                 patient = CustomUser.objects.get(id=patient_id, role="patient")
+                print(f"[DEBUG] Patient found: {patient}")
             except CustomUser.DoesNotExist:
                 messages.error(request, "Patient not found or not a valid patient.")
                 return redirect("doctor_dashboard")
         else:
-            # Render patient selection page if no patient_id is provided
+            print("[DEBUG] No patient_id provided, rendering patient selection page.")
             patients = CustomUser.objects.filter(role="patient")
             return render(request, "select_patient.html", {"patients": patients})
 
@@ -307,17 +317,28 @@ def add_medical_record(request, patient_id=None, record_id=None):
         is_edit = False
 
     if request.method == "POST":
+        print(f"[DEBUG] POST data: {request.POST}")
         form = MedicalRecordForm(request.POST, instance=record)
+
+        if not patient:
+            messages.error(request, "No patient selected.")
+            print("[ERROR] Attempted to save without patient.")
+            return redirect("doctor_dashboard")
+
+        # ✅ Set before validation to prevent RelatedObjectDoesNotExist in clean()
+        form.instance.patient = patient
+        form.instance.doctor = doctor
+
         if form.is_valid():
             try:
-                medical_record = form.save(commit=False)
-                medical_record.patient = patient
-                medical_record.doctor = doctor
-                medical_record.save()
+                medical_record = form.save()
+                print(f"[DEBUG] Medical record saved: {medical_record}")
 
                 # Handle referral if specified
                 referred_to = form.cleaned_data.get('referred_to')
                 department_sent_to = form.cleaned_data.get('department_sent_to')
+                print(f"[DEBUG] Referral info: referred_to={referred_to}, department_sent_to={department_sent_to}")
+
                 if referred_to and department_sent_to:
                     PatientReferral.objects.create(
                         patient=patient,
@@ -327,16 +348,21 @@ def add_medical_record(request, patient_id=None, record_id=None):
                         department=department_sent_to,
                         status='pending'
                     )
+                    print("[DEBUG] Patient referral created.")
 
                 messages.success(request, f"Medical record {'updated' if is_edit else 'added'} successfully!")
                 return redirect("doctor_dashboard")
+
             except Exception as e:
+                print(f"[ERROR] Exception while saving record: {e}")
                 messages.error(request, f"Error saving record: {str(e)}")
         else:
+            print(f"[ERROR] Form errors: {form.errors}")
             messages.error(request, "Please correct the errors below.")
     else:
         initial_data = {'patient': patient, 'doctor': doctor} if patient else {}
         form = MedicalRecordForm(instance=record, initial=initial_data)
+        print(f"[DEBUG] GET request, initial data: {initial_data}")
 
     context = {
         "form": form,
@@ -344,6 +370,7 @@ def add_medical_record(request, patient_id=None, record_id=None):
         "is_edit": is_edit,
     }
     return render(request, "add_medical_record.html", context)
+
 
 
 @login_required(login_url="login")
@@ -431,18 +458,17 @@ def delete_record(request, record_id):
         return redirect("patient_dashboard")
     return redirect("home")
 
-
 @login_required(login_url="login")
 def generate_pdf(request, record_id):
     record = get_object_or_404(MedicalRecord, id=record_id)
 
-    if not (
-        request.user == record.patient
-        or request.user == record.doctor.user
-        or request.user.role == "admin"
-    ):
-        messages.error(request, "You don't have permission to access this record.")
-        return redirect("home")
+    # if not (
+    #     request.user == record.patient
+    #     or request.user == record.doctor.user
+    #     or request.user.role == "admin"
+    # ):
+    #     messages.error(request, "You don't have permission to access this record.")
+    #     return redirect("home")
 
     html = render_to_string("medical_record_pdf.html", {"record": record})
     config = pdfkit.configuration(wkhtmltopdf=r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe")
@@ -519,7 +545,6 @@ def book_appointment(request):
         form = AppointmentForm()
     return render(request, "appointment.html", {"form": form})
 
-
 @login_required(login_url="login")
 def view_appointments(request):
     if request.user.role != "patient":
@@ -527,7 +552,6 @@ def view_appointments(request):
         return redirect("home")
     appointments = Appointment.objects.filter(patient=request.user).order_by("date", "time")
     return render(request, "view_appointments.html", {"appointments": appointments})
-
 
 @login_required(login_url="login")
 def reschedule_appointment(request, appointment_id):
