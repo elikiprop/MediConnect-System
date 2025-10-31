@@ -134,7 +134,7 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 import pdfkit
 
-PDFKIT_CONFIG = pdfkit.configuration(wkhtmltopdf="C:/Users/Eli Kiprop/Documents/wkhtmltopdf/bin/wkhtmltopdf.exe")
+PDFKIT_CONFIG = pdfkit.configuration(wkhtmltopdf="C:\\Users\\pc\\Downloads\\wkhtmltox-0.12.6-1.msvc2015-win64.exe")
 
 # Use the CustomUser model from mediapp
 AUTH_USER_MODEL = 'mediapp.CustomUser'
